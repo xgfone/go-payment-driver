@@ -176,7 +176,7 @@ func (d *_Driver) sendCallbackResponse(w http.ResponseWriter, err error) {
 	}
 }
 
-// If the trade has been fully refunded, return nil.
+// If the trade has been fully refunded, return ErrTradeRefundedFully.
 // If the balance is insufficient, return ErrBalanceInsufficient.
 // If it's not allowed to refund the trade, return ErrUnallowed.
 func (d *_Driver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) (info driver.RefundInfo, err error) {
@@ -218,7 +218,7 @@ func (d *_Driver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) 
 				err = driver.ErrUnallowed.WithReasonf("%s: %s", e.Code, e.Message)
 
 			case e.Code == "INVALID_REQUEST" && strings.Contains(e.Message, "已全额退款"):
-				err = nil
+				err = driver.ErrTradeRefundedFully
 
 			default:
 				err = fmt.Errorf("%s: %s", e.Code, e.Message)

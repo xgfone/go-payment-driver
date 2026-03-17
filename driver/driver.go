@@ -30,6 +30,7 @@ var (
 	ErrUnsupported         = codeint.ErrUnsupported
 	ErrBalanceInsufficient = codeint.ErrInsufficientBalance
 	ErrTooSmallTradeAmount = ErrUnallowed.WithReason("trade amount is too small")
+	ErrTradeRefundedFully  = ErrUnallowed.WithReason("trade has been refunded fully")
 )
 
 const (
@@ -203,7 +204,7 @@ type Driver interface {
 	// If the trade has been canceled, return nil.
 	CancelTrade(ctx context.Context, req CancelTradeRequest) (err error)
 
-	// If the trade has been fully refunded, return nil.
+	// If the trade has been fully refunded, return ErrTradeRefundedFully.
 	// If the balance is insufficient, return ErrBalanceInsufficient.
 	// If it's not allowed to refund the trade, return ErrUnallowed.
 	RefundTrade(ctx context.Context, req RefundTradeRequest) (info RefundInfo, err error)

@@ -121,7 +121,7 @@ func (d *QrcodeDriver) CancelTrade(ctx context.Context, query driver.CancelTrade
 	return
 }
 
-// If the trade has been fully refunded, return nil.
+// If the trade has been fully refunded, return ErrTradeRefundedFully.
 // If the balance is insufficient, return ErrBalanceInsufficient.
 // If it's not allowed to refund the trade, return ErrUnallowed.
 func (d *QrcodeDriver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) (info driver.RefundInfo, err error) {
