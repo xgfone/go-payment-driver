@@ -62,7 +62,7 @@ func (d *QrcodeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 		return
 	}
 
-	info = d.LinkInfo(rsp.QRCode, r.TradeCurrency)
+	info.PayLink = rsp.QRCode
 	return
 }
 

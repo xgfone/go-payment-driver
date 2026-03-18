@@ -101,8 +101,7 @@ func (d *AppDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest
 		return
 	}
 
-	info = driver.LinkInfo{}
-	info = d.LinkInfo(paylink, r.TradeCurrency)
+	info.PayLink = paylink
 	return
 }
 

@@ -109,10 +109,6 @@ type _Driver struct {
 	metadata driver.Metadata
 }
 
-func (d *_Driver) LinkInfo(paylink, currency string) driver.LinkInfo {
-	return driver.LinkInfo{PayLink: paylink, Currency: currency}
-}
-
 func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
 	if r.Share && r.TradeAmount < 10 {
 		return driver.ErrTooSmallTradeAmount

@@ -96,7 +96,7 @@ func (d *JsapiDriver) CreateTrade(ctx context.Context, r driver.CreateTradeReque
 		return
 	}
 
-	info = d.LinkInfo(paylink, r.TradeCurrency)
+	info.PayLink = paylink
 	return
 }
 

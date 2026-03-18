@@ -130,10 +130,6 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
-func (d *_Driver) LinkInfo(paylink, currency string) driver.LinkInfo {
-	return driver.LinkInfo{PayLink: paylink, Currency: currency}
-}
-
 func (d *_Driver) ExpireTime(timeout time.Duration) time.Time {
 	return timex.Now().Add(timeout)
 }

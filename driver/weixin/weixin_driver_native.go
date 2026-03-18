@@ -63,7 +63,7 @@ func (d *NativeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 	}
 
 	if resp != nil {
-		info = d.LinkInfo(*resp.CodeUrl, r.TradeCurrency)
+		info.PayLink = *resp.CodeUrl
 	}
 	return
 }

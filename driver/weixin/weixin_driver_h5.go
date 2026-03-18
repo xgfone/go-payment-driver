@@ -84,7 +84,7 @@ func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest)
 	}
 
 	if resp != nil {
-		info = d.LinkInfo(*resp.H5Url, r.TradeCurrency)
+		info.PayLink = *resp.H5Url
 	}
 	return
 }

@@ -91,8 +91,7 @@ type (
 	}
 
 	LinkInfo struct {
-		PayLink  string `json:",omitzero"`
-		Currency string `json:",omitzero"`
+		PayLink string `json:",omitzero"`
 
 		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
