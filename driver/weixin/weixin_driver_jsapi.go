@@ -28,7 +28,7 @@ import (
 // https://pay.wechatpay.cn/doc/v3/merchant/4012791856  CreateOrder
 
 func init() {
-	registerBuilder("jsapi", func(d _Driver) driver.Driver {
+	registerBuilder("jsapi", "", func(d _Driver) driver.Driver {
 		return &JsapiDriver{_Driver: d}
 	})
 }
@@ -45,7 +45,7 @@ func (d *JsapiDriver) CreateTrade(ctx context.Context, r driver.CreateTradeReque
 		return
 	}
 
-	expiretime := d.ExpireTime(r.Timeout)
+	expiretime := r.ExipredAt()
 	svc := jsapi.JsapiApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, jsapi.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
@@ -96,7 +96,7 @@ func (d *JsapiDriver) CreateTrade(ctx context.Context, r driver.CreateTradeReque
 		return
 	}
 
-	info = d.LinkInfo(paylink)
+	info = d.LinkInfo(paylink, r.TradeCurrency)
 	return
 }
 

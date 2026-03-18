@@ -28,13 +28,38 @@ type DriverConfig[Driver any] interface {
 
 type DriverNewer[Driver any] func(Driver) driver.Driver
 
+// New returns the new builder of a payment channel driver.
+//
+// Metadata:
+//
+//	Provider: Required
+//	PayScene: Required
+//	Type:     Optional, defaults to "${Provider}_${PayScene}"
+//	LinkType: Optional, defaults to Type
+//	Channels: Optional, defaults to [Provider]
+//	Currencies: Optional, defaults to ["CNY"]
 func New[Config DriverConfig[Driver], Driver any](newDriver DriverNewer[Driver], metadata driver.Metadata) Builder {
+	if metadata.Provider == "" {
+		panic("Metadata.Provider must not be empty")
+	}
+	if metadata.PayScene == "" {
+		panic("Metadata.PayScene must not be empty")
+	}
+
 	if metadata.Type == "" {
-		panic("Metadata.Type must not be empty")
+		metadata.Type = fmt.Sprintf("%s_%s", metadata.Provider, metadata.PayScene)
 	}
 
 	if metadata.LinkType == "" {
 		metadata.LinkType = driver.LinkType(metadata.Type)
+	}
+
+	if len(metadata.Channels) == 0 {
+		metadata.Channels = []string{metadata.Provider}
+	}
+
+	if len(metadata.Currencies) == 0 {
+		metadata.Currencies = []string{"CNY"}
 	}
 
 	ctype := reflect.TypeFor[Config]()

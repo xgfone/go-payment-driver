@@ -27,7 +27,7 @@ import (
 // https://pay.wechatpay.cn/doc/v3/merchant/4012791834  CreateOrder
 
 func init() {
-	registerBuilder("h5", func(d _Driver) driver.Driver {
+	registerBuilder("h5", "", func(d _Driver) driver.Driver {
 		return &H5Driver{_Driver: d}
 	})
 }
@@ -53,7 +53,7 @@ func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest)
 		d.config.H5Type = "Wap"
 	}
 
-	expiretime := d.ExpireTime(r.Timeout)
+	expiretime := r.ExipredAt()
 
 	svc := h5.H5ApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, h5.PrepayRequest{
@@ -84,7 +84,7 @@ func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest)
 	}
 
 	if resp != nil {
-		info = d.LinkInfo(*resp.H5Url)
+		info = d.LinkInfo(*resp.H5Url, r.TradeCurrency)
 	}
 	return
 }

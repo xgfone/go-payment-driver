@@ -27,7 +27,7 @@ import (
 // https://pay.wechatpay.cn/doc/v3/merchant/4013071041 // Refund Query
 
 func init() {
-	registerBuilder("native", func(d _Driver) driver.Driver {
+	registerBuilder("native", driver.LinkTypeCodeUrl, func(d _Driver) driver.Driver {
 		return &NativeDriver{_Driver: d}
 	})
 }
@@ -39,7 +39,7 @@ func (d *NativeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 		return
 	}
 
-	expiretime := d.ExpireTime(r.Timeout)
+	expiretime := r.ExipredAt()
 	svc := native.NativeApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, native.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
@@ -63,7 +63,7 @@ func (d *NativeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 	}
 
 	if resp != nil {
-		info = d.LinkInfo(*resp.CodeUrl)
+		info = d.LinkInfo(*resp.CodeUrl, r.TradeCurrency)
 	}
 	return
 }

@@ -16,6 +16,7 @@ package weixin
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"crypto"
 	"crypto/rand"
@@ -45,20 +46,14 @@ import (
 	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/random"
 	"github.com/xgfone/go-toolkit/runtimex"
-	"github.com/xgfone/go-toolkit/timex"
 	"github.com/xgfone/go-toolkit/unsafex"
 )
 
-var _channels = []string{Type}
+var defaultCurrency = "CNY"
 
-func registerBuilder(scene string, newf func(_Driver) driver.Driver) {
-	_type := fmt.Sprintf("%s_%s", Type, scene)
-	builder.Register(builder.New[*Config](newf, driver.Metadata{
-		Type:     _type,
-		PayScene: scene,
-		Provider: Type,
-		Channels: _channels,
-	}))
+func registerBuilder(scene string, linktype driver.LinkType, newf func(_Driver) driver.Driver) {
+	metadata := driver.NewMetadata(Type, scene).WithLinkType(linktype)
+	builder.Register(builder.New[*Config](newf, metadata))
 }
 
 func newDriver(c Config, b builder.Builder) (d _Driver, err error) {
@@ -114,12 +109,8 @@ type _Driver struct {
 	metadata driver.Metadata
 }
 
-func (d *_Driver) LinkInfo(paylink string) driver.LinkInfo {
-	return d.metadata.LinkType.LinkInfo(paylink)
-}
-
-func (d *_Driver) ExpireTime(timeout time.Duration) time.Time {
-	return timex.Now().Add(timeout)
+func (d *_Driver) LinkInfo(paylink, currency string) driver.LinkInfo {
+	return driver.LinkInfo{PayLink: paylink, Currency: currency}
 }
 
 func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
@@ -127,11 +118,8 @@ func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err err
 		return driver.ErrTooSmallTradeAmount
 	}
 
-	switch r.TradeCurrency {
-	case "CNY":
-	case "":
-		r.TradeCurrency = "CNY"
-	default:
+	r.TradeCurrency = cmp.Or(r.TradeCurrency, defaultCurrency)
+	if r.TradeCurrency != "CNY" {
 		return errors.New("trade currency is not CNY")
 	}
 

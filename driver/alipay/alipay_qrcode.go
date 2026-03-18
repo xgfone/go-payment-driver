@@ -47,6 +47,7 @@ func (d *QrcodeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 			Subject:     r.TradeDesc,
 			TotalAmount: formatAmount(r.TradeAmount),
 			ProductCode: "QR_CODE_OFFLINE",
+			TimeExpire:  r.ExipredAt().Format(time.DateTime),
 			// SellerId:        "",
 			// Body:            "",
 			// MerchantOrderNo: "",
@@ -61,7 +62,7 @@ func (d *QrcodeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 		return
 	}
 
-	info = d.LinkInfo(rsp.QRCode)
+	info = d.LinkInfo(rsp.QRCode, r.TradeCurrency)
 	return
 }
 

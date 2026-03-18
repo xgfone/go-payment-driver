@@ -16,11 +16,13 @@
 package driver
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"time"
 
 	"github.com/xgfone/go-toolkit/codeint"
+	"github.com/xgfone/go-toolkit/timex"
 )
 
 var (
@@ -32,6 +34,8 @@ var (
 	ErrTooSmallTradeAmount = ErrUnallowed.WithReason("trade amount is too small")
 	ErrTradeRefundedFully  = ErrUnallowed.WithReason("trade has been refunded fully")
 )
+
+const DefaultTimeout = time.Minute * 5
 
 const (
 	TaskStatusClosed     TaskStatus = "Closed"
@@ -49,10 +53,6 @@ type (
 	LinkType   string
 	TaskStatus string
 )
-
-func (lt LinkType) LinkInfo(paylink string) LinkInfo {
-	return LinkInfo{LinkType: lt, PayLink: paylink}
-}
 
 // Trade
 type (
@@ -91,8 +91,8 @@ type (
 	}
 
 	LinkInfo struct {
-		PayLink  string   `json:",omitzero"`
-		LinkType LinkType `json:",omitzero"`
+		PayLink  string `json:",omitzero"`
+		Currency string `json:",omitzero"`
 
 		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
@@ -117,6 +117,14 @@ type (
 		TaskStatus TaskStatus `json:",omitzero"`
 	}
 )
+
+func (r *CreateTradeRequest) GetTimeout() time.Duration {
+	return cmp.Or(r.Timeout, DefaultTimeout)
+}
+
+func (r *CreateTradeRequest) ExipredAt() time.Time {
+	return timex.Now().Add(r.GetTimeout())
+}
 
 // Refund
 type (
@@ -178,6 +186,25 @@ func (r RefundTradeRequest) QueryRefundRequest() QueryRefundRequest {
 	}
 }
 
+func NewMetadata(provider, payscene string) Metadata {
+	return Metadata{Provider: provider, PayScene: payscene}
+}
+
+func (md Metadata) WithLinkType(linktype LinkType) Metadata {
+	md.LinkType = linktype
+	return md
+}
+
+func (md Metadata) WithChannels(channels []string) Metadata {
+	md.Channels = channels
+	return md
+}
+
+func (md Metadata) WithCurrencies(currencies []string) Metadata {
+	md.Currencies = currencies
+	return md
+}
+
 type Metadata struct {
 	// The unique type of the payment channel driver, such as weixin_h5, alipay_jsapi, etc.
 	Type string
@@ -188,9 +215,13 @@ type Metadata struct {
 	LinkType LinkType
 
 	// The provider of the payment service, such as weixin, alipay, stripe, etc.
+	//
+	// Required.
 	Provider string
 
 	// The scene of the payment service, such as h5, app, jsapi, native, qrcode, etc.
+	//
+	// Required.
 	PayScene string
 
 	// The channels of the payment service, for example,
@@ -198,6 +229,10 @@ type Metadata struct {
 	// ["weixin", "alipay"] for some aggregation providers,
 	// etc.
 	Channels []string
+
+	// The ISO 4127 currency list supported by the payment channel driver,
+	// for example, ["USD"], ["CNY"], ["USD", "CNY"].
+	Currencies []string
 }
 
 type Driver interface {

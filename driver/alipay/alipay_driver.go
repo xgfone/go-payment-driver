@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/smartwalle/alipay/v3"
 	"github.com/xgfone/go-payment-driver/builder"
@@ -25,16 +26,8 @@ import (
 	"github.com/xgfone/go-toolkit/timex"
 )
 
-var _channels = []string{Type}
-
 func registerBuilder(scene string, newf func(_Driver) driver.Driver) {
-	_type := fmt.Sprintf("%s_%s", Type, scene)
-	builder.Register(builder.New[*Config](newf, driver.Metadata{
-		Type:     _type,
-		PayScene: scene,
-		Provider: Type,
-		Channels: _channels,
-	}))
+	builder.Register(builder.New[*Config](newf, driver.NewMetadata(Type, scene)))
 }
 
 type _Driver struct {
@@ -137,6 +130,26 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
-func (d *_Driver) LinkInfo(paylink string) driver.LinkInfo {
-	return d.metadata.LinkType.LinkInfo(paylink)
+func (d *_Driver) LinkInfo(paylink, currency string) driver.LinkInfo {
+	return driver.LinkInfo{PayLink: paylink, Currency: currency}
+}
+
+func (d *_Driver) ExpireTime(timeout time.Duration) time.Time {
+	return timex.Now().Add(timeout)
+}
+
+func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
+	if r.Share && r.TradeAmount < 10 {
+		return driver.ErrTooSmallTradeAmount
+	}
+
+	switch r.TradeCurrency {
+	case "CNY":
+	case "":
+		r.TradeCurrency = "CNY"
+	default:
+		return errors.New("trade currency is not CNY")
+	}
+
+	return
 }
