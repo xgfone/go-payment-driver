@@ -58,9 +58,9 @@ func (lt LinkType) LinkInfo(paylink string) LinkInfo {
 type (
 	CreateTradeRequest struct {
 		// Required.
-		TradeNo       string
-		TradeDesc     string
-		TradeAmount   int64  // the smallest currency unit, such as Cent
+		TradeNo       string `json:",omitzero"`
+		TradeDesc     string `json:",omitzero"`
+		TradeAmount   int64  `json:",omitzero"` // the smallest currency unit, such as Cent
 		TradeCurrency string `json:",omitzero"`
 		CallbackUrl   string `json:",omitzero"`
 
@@ -75,14 +75,18 @@ type (
 	}
 
 	CancelTradeRequest struct {
-		OpenId         string `json:",omitzero"`
-		TradeNo        string `json:",omitzero"`
+		OpenId  string `json:",omitzero"`
+		TradeNo string `json:",omitzero"`
+
+		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
 	}
 
 	QueryTradeRequest struct {
-		OpenId         string `json:",omitzero"`
-		TradeNo        string `json:",omitzero"`
+		OpenId  string `json:",omitzero"`
+		TradeNo string `json:",omitzero"`
+
+		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
 	}
 
@@ -90,6 +94,7 @@ type (
 		PayLink  string   `json:",omitzero"`
 		LinkType LinkType `json:",omitzero"`
 
+		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
 	}
 
@@ -136,9 +141,10 @@ type (
 	QueryRefundRequest struct {
 		OpenId string `json:",omitzero"`
 
-		TradeNo  string
-		RefundNo string
+		TradeNo  string `json:",omitzero"`
+		RefundNo string `json:",omitzero"`
 
+		ChannelData    string `json:",omitzero"`
 		ChannelTradeNo string `json:",omitzero"`
 	}
 
