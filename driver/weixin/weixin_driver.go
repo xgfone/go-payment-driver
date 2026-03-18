@@ -127,7 +127,11 @@ func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err err
 		return driver.ErrTooSmallTradeAmount
 	}
 
-	if r.TradeCurrency != "CNY" {
+	switch r.TradeCurrency {
+	case "CNY":
+	case "":
+		r.TradeCurrency = "CNY"
+	default:
 		return errors.New("trade currency is not CNY")
 	}
 
