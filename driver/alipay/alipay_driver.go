@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/smartwalle/alipay/v3"
 	"github.com/xgfone/go-payment-driver/builder"
@@ -128,10 +127,6 @@ func newDriver(c Config, b builder.Builder) (d _Driver, err error) {
 
 func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
-}
-
-func (d *_Driver) ExpireTime(timeout time.Duration) time.Time {
-	return timex.Now().Add(timeout)
 }
 
 func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {

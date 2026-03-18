@@ -206,11 +206,13 @@ func (md Metadata) WithCurrencies(currencies []string) Metadata {
 
 type Metadata struct {
 	// The unique type of the payment channel driver, such as weixin_h5, alipay_jsapi, etc.
+	//
+	// If empty, maybe use "${Provider}_${PayScene}" instead.
 	Type string
 
 	// The link type of the payment channel driver, such as weixin_h5, alipay_jsapi, etc.
 	//
-	// If empty, use Type instead.
+	// If empty, maybe use Type instead.
 	LinkType LinkType
 
 	// The provider of the payment service, such as weixin, alipay, stripe, etc.
@@ -223,7 +225,7 @@ type Metadata struct {
 	// Required.
 	PayScene string
 
-	// The channels of the payment service, for example,
+	// The channels supported by the payment service, for example,
 	// ["weixin"] for "weixin", ["alipay"] for "alipay",
 	// ["weixin", "alipay"] for some aggregation providers,
 	// etc.
@@ -232,6 +234,9 @@ type Metadata struct {
 	// The ISO 4127 currency list supported by the payment channel driver,
 	// for example, ["USD"], ["CNY"], ["USD", "CNY"].
 	Currencies []string
+
+	// Whether to need to use ChannelData in XxxRequest after creating trade.
+	NeedChannelData bool
 }
 
 type Driver interface {
