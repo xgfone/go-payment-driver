@@ -14,14 +14,6 @@
 
 package alipay
 
-import (
-	"context"
-
-	"github.com/xgfone/go-payment-driver/builder"
-	"github.com/xgfone/go-toolkit/jsonx"
-	"github.com/xgfone/go-toolkit/validation"
-)
-
 const (
 	SignMethodCert   = "cert"
 	SignMethodPubkey = "pubkey"
@@ -60,17 +52,6 @@ type Config struct {
 	ShareAsync       bool
 
 	IsTest bool `json:",omitempty"`
-}
-
-func (c *Config) Parse(conf string) (err error) {
-	if err = jsonx.UnmarshalString(conf, c); err == nil {
-		err = validation.Validate(context.Background(), c)
-	}
-	return
-}
-
-func (c *Config) Driver(b builder.Builder) (_Driver, error) {
-	return newDriver(*c, b)
 }
 
 func (c *Config) Desensitize() {

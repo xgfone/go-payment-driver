@@ -20,6 +20,7 @@ import (
 
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/native"
+	"github.com/xgfone/go-payment-driver/builder"
 	"github.com/xgfone/go-payment-driver/driver"
 )
 
@@ -27,8 +28,9 @@ import (
 // https://pay.wechatpay.cn/doc/v3/merchant/4013071041 // Refund Query
 
 func init() {
-	registerBuilder("native", driver.LinkTypeCodeUrl, func(d _Driver) driver.Driver {
-		return &NativeDriver{_Driver: d}
+	registerBuilder("native", driver.LinkTypeCodeUrl, func(b builder.Builder, c Config) (driver.Driver, error) {
+		d, err := newDriver(c, b)
+		return &NativeDriver{_Driver: d}, err
 	})
 }
 

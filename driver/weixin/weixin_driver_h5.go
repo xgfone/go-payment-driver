@@ -20,6 +20,7 @@ import (
 
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/h5"
+	"github.com/xgfone/go-payment-driver/builder"
 	"github.com/xgfone/go-payment-driver/driver"
 )
 
@@ -27,8 +28,9 @@ import (
 // https://pay.wechatpay.cn/doc/v3/merchant/4012791834  CreateOrder
 
 func init() {
-	registerBuilder("h5", "", func(d _Driver) driver.Driver {
-		return &H5Driver{_Driver: d}
+	registerBuilder("h5", "", func(b builder.Builder, c Config) (driver.Driver, error) {
+		d, err := newDriver(c, b)
+		return &H5Driver{_Driver: d}, err
 	})
 }
 

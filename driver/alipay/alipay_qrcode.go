@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/smartwalle/alipay/v3"
+	"github.com/xgfone/go-payment-driver/builder"
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/timex"
@@ -31,8 +32,9 @@ import (
 // https://opendocs.alipay.com/open/8ad49e4a_alipay.trade.precreate
 
 func init() {
-	registerBuilder("qrcode", func(d _Driver) driver.Driver {
-		return &QrcodeDriver{_Driver: d}
+	registerBuilder("qrcode", func(b builder.Builder, c Config) (driver.Driver, error) {
+		driver, err := newDriver(c, b)
+		return &QrcodeDriver{_Driver: driver}, err
 	})
 }
 

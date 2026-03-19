@@ -25,8 +25,8 @@ import (
 	"github.com/xgfone/go-toolkit/timex"
 )
 
-func registerBuilder(scene string, newf func(_Driver) driver.Driver) {
-	builder.Register(builder.New[*Config](newf, driver.NewMetadata(Type, scene)))
+func registerBuilder(scene string, newf builder.DriverNewer[Config]) {
+	builder.Register(builder.New[Config](newf, driver.NewMetadata(Type, scene)))
 }
 
 type _Driver struct {

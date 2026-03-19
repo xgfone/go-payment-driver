@@ -15,18 +15,14 @@
 package builder
 
 import (
+	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/xgfone/go-payment-driver/driver"
+	"github.com/xgfone/go-toolkit/validation"
 )
 
-type DriverConfig[Driver any] interface {
-	Parse(string) error
-	Driver(Builder) (Driver, error)
-}
-
-type DriverNewer[Driver any] func(Driver) driver.Driver
+type DriverNewer[Config any] func(Builder, Config) (driver.Driver, error)
 
 // New returns the new builder of a payment channel driver.
 //
@@ -38,7 +34,7 @@ type DriverNewer[Driver any] func(Driver) driver.Driver
 //	LinkType: Optional, defaults to Type
 //	Channels: Optional, defaults to [Provider]
 //	Currencies: Optional, defaults to ["CNY"]
-func New[Config DriverConfig[Driver], Driver any](newDriver DriverNewer[Driver], metadata driver.Metadata) Builder {
+func New[Config any](newDriver DriverNewer[Config], metadata driver.Metadata) Builder {
 	if metadata.Provider == "" {
 		panic("Metadata.Provider must not be empty")
 	}
@@ -62,47 +58,36 @@ func New[Config DriverConfig[Driver], Driver any](newDriver DriverNewer[Driver],
 		metadata.Currencies = []string{"CNY"}
 	}
 
-	ctype := reflect.TypeFor[Config]()
-	if ctype.Kind() != reflect.Pointer {
-		panic(fmt.Errorf("builder typed '%s' expects config type is a pointer", metadata.Type))
-	}
-
-	ctype = ctype.Elem()
-	newconfig := func() Config { return reflect.New(ctype).Interface().(Config) }
-
-	return &_Builder[Config, Driver]{
+	return &_Builder[Config]{
 		metadata:  metadata,
-		newConfig: newconfig,
 		newDriver: newDriver,
 	}
 }
 
-type _Builder[Config DriverConfig[Driver], Driver any] struct {
+type _Builder[Config any] struct {
 	metadata  driver.Metadata
-	newConfig func() Config
-	newDriver func(Driver) driver.Driver
+	newDriver DriverNewer[Config]
 }
 
-func (b *_Builder[Config, Driver]) Metadata() driver.Metadata {
+func (b *_Builder[Config]) Metadata() driver.Metadata {
 	return b.metadata
 }
 
-func (b *_Builder[Config, Driver]) ParseConfig(conf string) (any, error) {
-	config := b.newConfig()
-	err := config.Parse(conf)
+func (b *_Builder[Config]) ParseConfig(conf string) (any, error) {
+	var err error
+	var config Config
+	if v, ok := any(config).(interface{ Bind(string) error }); ok {
+		err = v.Bind(conf)
+	} else {
+		err = validation.BindJSONString(context.Background(), conf, &config)
+	}
 	return config, err
 }
 
-func (b *_Builder[Config, Driver]) BuildDriver(conf any) (driver.Driver, error) {
+func (b *_Builder[Config]) BuildDriver(conf any) (driver.Driver, error) {
 	config, ok := conf.(Config)
 	if !ok {
 		return nil, fmt.Errorf("expects config type '%T', but got '%T'", config, conf)
 	}
-
-	driver, err := config.Driver(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return b.newDriver(driver), nil
+	return b.newDriver(b, config)
 }
