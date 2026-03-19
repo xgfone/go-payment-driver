@@ -15,6 +15,7 @@
 package alipay
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"net/http"
@@ -290,12 +291,12 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.T
 	info.TradeAmount, _ = parseAmount(rsp.TotalAmount)
 	info.TradeCurrency = rsp.TransCurrency
 
-	info.PaidCurrency = info.TradeCurrency
-	info.PaidAmount, _ = parseAmount(rsp.BuyerPayAmount)
-
 	info.ChannelTradeNo = rsp.TradeNo
+	info.ChannelStatus = string(rsp.TradeStatus)
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 512)
 
+	info.PaidCurrency = info.TradeCurrency
+	info.PaidAmount, _ = parseAmount(cmp.Or(rsp.BuyerPayAmount, rsp.ReceiptAmount))
 	if rsp.BuyerOpenId != "" {
 		info.PayerId = rsp.BuyerOpenId
 	} else {
@@ -305,7 +306,6 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.T
 		info.PaidAt, _ = time.ParseInLocation(time.DateTime, rsp.SendPayDate, time.Local)
 	}
 
-	info.ChannelStatus = string(rsp.TradeStatus)
 	switch rsp.TradeStatus {
 	case alipay.TradeStatusWaitBuyerPay:
 		info.TaskStatus = driver.TaskStatusProcessing
@@ -345,12 +345,12 @@ func (d *QrcodeDriver) parseNotification(rsp *alipay.Notification) (info driver.
 	info.TradeAmount, _ = parseAmount(rsp.TotalAmount)
 	info.TradeCurrency = ""
 
-	info.PaidCurrency = info.TradeCurrency
-	info.PaidAmount, _ = parseAmount(rsp.BuyerPayAmount)
-
 	info.ChannelTradeNo = rsp.TradeNo
+	info.ChannelStatus = string(rsp.TradeStatus)
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 256)
 
+	info.PaidCurrency = info.TradeCurrency
+	info.PaidAmount, _ = parseAmount(cmp.Or(rsp.BuyerPayAmount, rsp.ReceiptAmount))
 	if rsp.BuyerId != "" {
 		info.PayerId = rsp.BuyerId
 	} else if rsp.BuyerOpenId != "" {
@@ -358,12 +358,10 @@ func (d *QrcodeDriver) parseNotification(rsp *alipay.Notification) (info driver.
 	} else {
 		info.PayerId = rsp.BuyerLogonId
 	}
-
 	if rsp.GmtPayment != "" {
 		info.PaidAt, _ = time.ParseInLocation(time.DateTime, rsp.GmtPayment, time.Local)
 	}
 
-	info.ChannelStatus = string(rsp.TradeStatus)
 	switch rsp.TradeStatus {
 	case alipay.TradeStatusWaitBuyerPay:
 		info.TaskStatus = driver.TaskStatusProcessing
@@ -431,16 +429,16 @@ func (d *QrcodeDriver) parseRefundInfo(rsp *alipay.TradeRefundRsp) (info driver.
 
 	/// ---------------------------------
 	info.TradeNo = rsp.OutTradeNo
+	// info.TradeAmount = 0
 
-	// info.PayAmount Price
-	// info.Currency  string
-	// info.RefundId string
-	// info.RefundAmount Price
+	// info.RefundNo = ""
+	// info.RefundReason = ""
+	// info.RefundAmount = 0
 
-	info.ChannelRefundNo = ""
 	info.ChannelTradeNo = rsp.TradeNo
+	// info.ChannelRefundNo = ""
+	// info.ChannelStatus = ""
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 1024)
-	// info.ChannelStatus   string
 
 	if rsp.FundChange == "Y" {
 		info.RefundedAt = timex.Now()
@@ -504,12 +502,13 @@ func (d *QrcodeDriver) parseRefundQuery(rsp *alipay.TradeFastPayRefundQueryRsp) 
 	info.TradeAmount, _ = parseAmount(rsp.TotalAmount)
 
 	info.RefundNo = rsp.OutRequestNo
+	// info.RefundReason = ""
 	info.RefundAmount, _ = parseAmount(rsp.RefundAmount)
 
-	info.ChannelRefundNo = ""
+	// info.ChannelRefundNo = ""
 	info.ChannelTradeNo = rsp.TradeNo
-	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 1024)
 	info.ChannelStatus = rsp.RefundStatus
+	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 1024)
 
 	info.RefundedAt, _ = time.ParseInLocation(time.DateTime, rsp.GMTRefundPay, time.Local)
 
