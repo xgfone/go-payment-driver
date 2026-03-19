@@ -16,7 +16,6 @@ package alipay
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/smartwalle/alipay/v3"
 )
@@ -59,14 +58,6 @@ func ToError(err error) error {
 	}
 
 	return _e
-}
-
-func parseAmount(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
-}
-
-func formatAmount(v int64) string {
-	return fmt.Sprintf("%d.%02d", v/100, v%100)
 }
 
 type (

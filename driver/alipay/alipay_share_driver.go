@@ -74,7 +74,7 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 
 			receivers[i] = RoyaltyParameters{
 				Desc:   r.ShareDesc,
-				Amount: formatAmount(r.ShareAmount),
+				Amount: driver.FormatPercentAmount(r.ShareAmount),
 
 				TransOut:     d.config.ShareAccount,
 				TransOutType: outatype,
@@ -228,7 +228,7 @@ func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (
 			failureReason = fmt.Sprintf("%s: %s", sd.ErrorCode, sd.ErrorDesc)
 		}
 
-		shareAmount, _ := parseAmount(sd.Amount)
+		shareAmount, _ := driver.ParsePercentAmount(sd.Amount)
 		info.ShareRecords[i] = share.ShareRecord{
 			ShareReceiver: share.ShareReceiver{
 				ShareAmount: shareAmount,
