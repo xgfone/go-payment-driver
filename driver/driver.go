@@ -234,9 +234,6 @@ type Metadata struct {
 	// The ISO 4127 currency list supported by the payment channel driver,
 	// for example, ["USD"], ["CNY"], ["USD", "CNY"].
 	Currencies []string
-
-	// Whether to need to use ChannelData in XxxRequest after creating trade.
-	NeedChannelData bool
 }
 
 type Driver interface {
