@@ -32,7 +32,7 @@ import (
 // https://opendocs.alipay.com/open/8ad49e4a_alipay.trade.precreate
 
 func init() {
-	registerBuilder("qrcode", func(b builder.Builder, c Config) (driver.Driver, error) {
+	registerBuilder("qrcode", driver.LinkTypeCodeUrl, func(b builder.Builder, c Config) (driver.Driver, error) {
 		driver, err := newDriver(c, b)
 		return &QrcodeDriver{_Driver: driver}, err
 	})
