@@ -266,18 +266,14 @@ func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.Trad
 		fallthrough
 
 	case "SUCCESS":
-		info.TaskStatus = driver.TaskStatusSuccess
 		info.TradeNo = runtimex.Indirect(trans.OutTradeNo)
-		info.ChannelTradeNo = runtimex.Indirect(trans.TransactionId)
 
 		if trans.SuccessTime != nil {
 			info.PaidAt, _ = time.Parse(time.RFC3339, *trans.SuccessTime)
 		}
-
 		if trans.Payer != nil {
 			info.PayerId = runtimex.Indirect(trans.Payer.Openid)
 		}
-
 		if trans.Amount != nil {
 			info.TradeAmount = runtimex.Indirect(trans.Amount.Total)
 			info.TradeCurrency = runtimex.Indirect(trans.Amount.Currency)
@@ -310,6 +306,9 @@ func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.Trad
 		if data.BankType != "" || len(data.Promotions) > 0 {
 			info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 24)
 		}
+		info.ChannelTradeNo = runtimex.Indirect(trans.TransactionId)
+
+		info.TaskStatus = driver.TaskStatusSuccess
 
 	case "USERPAYING", "NOTPAY":
 		info.TaskStatus = driver.TaskStatusProcessing
@@ -336,18 +335,19 @@ func (d *_Driver) parseRefundRequest(r *refunddomestic.Refund) (info driver.Refu
 	channelDataStr, _ := jsonx.MarshalStringWithCap(channelData, 32)
 
 	info = driver.RefundInfo{
-		TradeNo:    runtimex.Indirect(r.OutTradeNo),
-		RefundNo:   runtimex.Indirect(r.OutRefundNo),
-		RefundedAt: runtimex.Indirect(r.SuccessTime),
+		TradeNo:     runtimex.Indirect(r.OutTradeNo),
+		TradeAmount: runtimex.Indirect(runtimex.Indirect(r.Amount).Total),
+
+		RefundNo:     runtimex.Indirect(r.OutRefundNo),
+		RefundAmount: runtimex.Indirect(runtimex.Indirect(r.Amount).PayerRefund),
 
 		ChannelTradeNo:  runtimex.Indirect(r.TransactionId),
 		ChannelRefundNo: runtimex.Indirect(r.RefundId),
 		ChannelStatus:   string(runtimex.Indirect(r.Status)),
 		ChannelData:     channelDataStr,
-	}
 
-	info.TradeAmount = runtimex.Indirect(runtimex.Indirect(r.Amount).Total)
-	info.RefundAmount = runtimex.Indirect(runtimex.Indirect(r.Amount).PayerRefund)
+		RefundedAt: runtimex.Indirect(r.SuccessTime),
+	}
 
 	// SUCCESS: 退款成功
 	// CLOSED: 退款关闭
