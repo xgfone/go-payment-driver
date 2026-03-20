@@ -17,6 +17,8 @@ package currency
 import (
 	"fmt"
 	"strings"
+
+	"github.com/xgfone/go-toolkit/mapx"
 )
 
 var _currencies = make(map[string]Currency, 32)
@@ -56,6 +58,11 @@ func Register(code string, minorUnit int8, symbol, name string) {
 func Get(code string) (currency Currency, ok bool) {
 	currency, ok = _currencies[normalizeCode(code)]
 	return
+}
+
+// GetAllCodes returns all the registered currency codes.
+func GetAllCodes() []string {
+	return mapx.Keys(_currencies)
 }
 
 // IsSupported reports whether the given currency code is supported.
