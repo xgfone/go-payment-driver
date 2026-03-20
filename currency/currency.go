@@ -28,6 +28,7 @@ const (
 )
 
 var (
+	ErrUnsupportedCurrency  = errors.New("unsupported currency code")
 	ErrUnsupportedMinorUnit = errors.New("unsupported minor unit")
 	ErrTooManyDecimalPlaces = errors.New("too many decimal places")
 	ErrInvalidAmountFormat  = errors.New("invalid amount format")

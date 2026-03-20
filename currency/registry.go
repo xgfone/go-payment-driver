@@ -63,3 +63,25 @@ func IsSupported(code string) bool {
 	_, ok := _currencies[normalizeCode(code)]
 	return ok
 }
+
+// FormatMinorToMajor looks up a currency by code and
+// formats a minor amount int64 into a major amount string.
+//
+// It returns an error if the currency is not found.
+func FormatMinorToMajor(minorAmount int64, currencyCode string) (string, error) {
+	currency, ok := Get(currencyCode)
+	if !ok {
+		return "", fmt.Errorf("%w: not found currency %s", ErrUnsupportedCurrency, currencyCode)
+	}
+	return currency.FormatMinorToMajor(minorAmount)
+}
+
+// ParseMajorToMinor looks up a currency by code and
+// parses a major amount string into a minor amount int64.
+func ParseMajorToMinor(majorAmount string, currencyCode string) (int64, error) {
+	currency, ok := Get(currencyCode)
+	if !ok {
+		return 0, fmt.Errorf("%w: not found currency %s", ErrUnsupportedCurrency, currencyCode)
+	}
+	return currency.ParseMajorToMinor(majorAmount)
+}
