@@ -41,11 +41,7 @@ type Currency struct {
 	MinorUnit int8
 }
 
-func (c *Currency) Validate() error {
-	if c == nil {
-		return errors.New("Currency is nil")
-	}
-
+func (c Currency) Validate() error {
 	if c.Code == "" {
 		return errors.New("Currency: Code is empty")
 	}
@@ -57,7 +53,7 @@ func (c *Currency) Validate() error {
 	return nil
 }
 
-func (c *Currency) scale() (uint64, error) {
+func (c Currency) scale() (uint64, error) {
 	if err := c.Validate(); err != nil {
 		return 0, err
 	}
@@ -86,7 +82,7 @@ func (c *Currency) scale() (uint64, error) {
 //	MinorUnit=2, 123  => "1.23"
 //	MinorUnit=2, -123 => "-1.23"
 //	MinorUnit=0, 500  => "500"
-func (c *Currency) FormatMinorToMajor(minorAmount int64) (string, error) {
+func (c Currency) FormatMinorToMajor(minorAmount int64) (string, error) {
 	scale, err := c.scale()
 	if err != nil {
 		return "", err
@@ -122,7 +118,7 @@ func (c *Currency) FormatMinorToMajor(minorAmount int64) (string, error) {
 //	MinorUnit=2, ".5"    => 50
 //	MinorUnit=2, "-1.23" => -123
 //	MinorUnit=2, "1.234" => error
-func (c *Currency) ParseMajorToMinor(majorAmount string) (int64, error) {
+func (c Currency) ParseMajorToMinor(majorAmount string) (int64, error) {
 	if err := c.Validate(); err != nil {
 		return 0, err
 	}

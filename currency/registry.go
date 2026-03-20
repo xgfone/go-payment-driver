@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-var _currencies = make(map[string]*Currency, 32)
+var _currencies = make(map[string]Currency, 32)
 
 func normalizeCode(code string) string {
 	return strings.ToUpper(strings.TrimSpace(code))
@@ -47,14 +47,15 @@ func Register(code string, minorUnit int8, symbol, name string) {
 		panic(err)
 	}
 
-	_currencies[code] = &currency
+	_currencies[code] = currency
 }
 
 // Get returns the registered currency by code.
 //
 // It returns nil if the currency is not found.
-func Get(code string) *Currency {
-	return _currencies[normalizeCode(code)]
+func Get(code string) (currency Currency, ok bool) {
+	currency, ok = _currencies[normalizeCode(code)]
+	return
 }
 
 // IsSupported reports whether the given currency code is supported.
