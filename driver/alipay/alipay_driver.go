@@ -21,6 +21,7 @@ import (
 
 	"github.com/smartwalle/alipay/v3"
 	"github.com/xgfone/go-payment-driver/builder"
+	"github.com/xgfone/go-payment-driver/currency"
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-toolkit/timex"
 )
@@ -130,17 +131,25 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
+func (d *_Driver) FormatMinorToMajor(minorAmount int64) (string, error) {
+	return currency.CNY.FormatMinorToMajor(minorAmount)
+}
+
+func (d *_Driver) ParseMajorToMinor(majorAmount string) (int64, error) {
+	return currency.CNY.ParseMajorToMinor(majorAmount)
+}
+
 func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
-	if r.Share && r.TradeAmount < 10 {
-		return driver.ErrTooSmallTradeAmount
+	if !d.metadata.CurrencyIsSupported(r.TradeCurrency) {
+		return fmt.Errorf("not supported currency '%s'", r.TradeCurrency)
 	}
 
-	switch r.TradeCurrency {
-	case "CNY":
-	case "":
-		r.TradeCurrency = "CNY"
-	default:
-		return errors.New("trade currency is not CNY")
+	return
+}
+
+func (d *_Driver) CheckRefundTradeRequest(r *driver.RefundTradeRequest) (err error) {
+	if !d.metadata.CurrencyIsSupported(r.RefundCurrency) {
+		return fmt.Errorf("not supported currency '%s'", r.RefundCurrency)
 	}
 
 	return
