@@ -35,6 +35,12 @@ var (
 	ErrAmountOutOfRange     = errors.New("amount out of int64 range")
 )
 
+var (
+	CNY = Currency{Code: "CNY", MinorUnit: 2, Symbol: "¥", Name: "Chinese Yuan"}
+	USD = Currency{Code: "USD", MinorUnit: 2, Symbol: "$", Name: "US Dollar"}
+	EUR = Currency{Code: "EUR", MinorUnit: 2, Symbol: "€", Name: "Euro"}
+)
+
 type Currency struct {
 	Name      string
 	Code      string

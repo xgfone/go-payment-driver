@@ -15,7 +15,6 @@
 package alipay
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"net/http"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/smartwalle/alipay/v3"
 	"github.com/xgfone/go-payment-driver/builder"
+	"github.com/xgfone/go-payment-driver/currency"
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/timex"
@@ -42,13 +42,18 @@ func init() {
 type QrcodeDriver struct{ _Driver }
 
 func (d *QrcodeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest) (info driver.LinkInfo, err error) {
+	totalAmount, err := currency.FormatMinorToMajor(r.TradeAmount, r.TradeCurrency)
+	if err != nil {
+		return
+	}
+
 	rsp, err := d.client.TradePreCreate(ctx, alipay.TradePreCreate{
 		// DiscountableAmount:"",
 		Trade: alipay.Trade{
 			NotifyURL:   r.CallbackUrl,
 			OutTradeNo:  r.TradeNo,
 			Subject:     r.TradeDesc,
-			TotalAmount: driver.FormatPercentAmount(r.TradeAmount),
+			TotalAmount: totalAmount,
 			ProductCode: "QR_CODE_OFFLINE",
 			TimeExpire:  r.ExipredAt().Format(time.DateTime),
 			// SellerId:        "",
@@ -129,9 +134,14 @@ func (d *QrcodeDriver) CancelTrade(ctx context.Context, query driver.CancelTrade
 // If the balance is insufficient, return ErrBalanceInsufficient.
 // If it's not allowed to refund the trade, return ErrUnallowed.
 func (d *QrcodeDriver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) (info driver.RefundInfo, err error) {
+	refundAmount, err := currency.FormatMinorToMajor(r.RefundAmount, r.RefundCurrency)
+	if err != nil {
+		return
+	}
+
 	rsp, err := d.client.TradeRefund(ctx, alipay.TradeRefund{
 		OutTradeNo:   r.TradeNo,
-		RefundAmount: driver.FormatPercentAmount(r.RefundAmount),
+		RefundAmount: refundAmount,
 		RefundReason: r.RefundReason,
 		OutRequestNo: r.RefundNo,
 
@@ -288,7 +298,7 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.T
 	}
 
 	info.TradeNo = rsp.OutTradeNo
-	info.TradeAmount, _ = driver.ParsePercentAmount(rsp.TotalAmount)
+	info.TradeAmount, _ = currency.ParseMajorToMinor(rsp.TotalAmount, rsp.TransCurrency)
 	info.TradeCurrency = rsp.TransCurrency
 
 	info.ChannelTradeNo = rsp.TradeNo
@@ -296,7 +306,7 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.T
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 512)
 
 	info.PaidCurrency = info.TradeCurrency
-	info.PaidAmount, _ = driver.ParsePercentAmount(cmp.Or(rsp.BuyerPayAmount, rsp.ReceiptAmount))
+	info.PaidAmount, _ = currency.ParseMajorToMinor(rsp.BuyerPayAmount, rsp.TransCurrency)
 	if rsp.BuyerOpenId != "" {
 		info.PayerId = rsp.BuyerOpenId
 	} else {
@@ -342,7 +352,7 @@ func (d *QrcodeDriver) parseNotification(rsp *alipay.Notification) (info driver.
 	}
 
 	info.TradeNo = rsp.OutTradeNo
-	info.TradeAmount, _ = driver.ParsePercentAmount(rsp.TotalAmount)
+	info.TradeAmount, _ = currency.CNY.ParseMajorToMinor(rsp.TotalAmount)
 	info.TradeCurrency = ""
 
 	info.ChannelTradeNo = rsp.TradeNo
@@ -350,7 +360,7 @@ func (d *QrcodeDriver) parseNotification(rsp *alipay.Notification) (info driver.
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 256)
 
 	info.PaidCurrency = info.TradeCurrency
-	info.PaidAmount, _ = driver.ParsePercentAmount(cmp.Or(rsp.BuyerPayAmount, rsp.ReceiptAmount))
+	info.PaidAmount, _ = currency.CNY.ParseMajorToMinor(rsp.BuyerPayAmount)
 	if rsp.BuyerId != "" {
 		info.PayerId = rsp.BuyerId
 	} else if rsp.BuyerOpenId != "" {
@@ -499,11 +509,11 @@ func (d *QrcodeDriver) parseRefundQuery(rsp *alipay.TradeFastPayRefundQueryRsp) 
 
 	/// ---------------------------------
 	info.TradeNo = rsp.OutTradeNo
-	info.TradeAmount, _ = driver.ParsePercentAmount(rsp.TotalAmount)
+	info.TradeAmount, _ = currency.CNY.ParseMajorToMinor(rsp.TotalAmount)
 
 	info.RefundNo = rsp.OutRequestNo
 	// info.RefundReason = ""
-	info.RefundAmount, _ = driver.ParsePercentAmount(rsp.RefundAmount)
+	info.RefundAmount, _ = currency.CNY.ParseMajorToMinor(rsp.RefundAmount)
 
 	// info.ChannelRefundNo = ""
 	info.ChannelTradeNo = rsp.TradeNo

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/smartwalle/alipay/v3"
+	"github.com/xgfone/go-payment-driver/currency"
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-payment-driver/share"
 	"github.com/xgfone/go-toolkit/random"
@@ -72,9 +73,14 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 				return share.ShareInfo{}, err
 			}
 
+			amount, err := currency.CNY.FormatMinorToMajor(r.ShareAmount)
+			if err != nil {
+				return share.ShareInfo{}, err
+			}
+
 			receivers[i] = RoyaltyParameters{
 				Desc:   r.ShareDesc,
-				Amount: driver.FormatPercentAmount(r.ShareAmount),
+				Amount: amount,
 
 				TransOut:     d.config.ShareAccount,
 				TransOutType: outatype,
@@ -228,7 +234,7 @@ func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (
 			failureReason = fmt.Sprintf("%s: %s", sd.ErrorCode, sd.ErrorDesc)
 		}
 
-		shareAmount, _ := driver.ParsePercentAmount(sd.Amount)
+		shareAmount, _ := currency.CNY.ParseMajorToMinor(sd.Amount)
 		info.ShareRecords[i] = share.ShareRecord{
 			ShareReceiver: share.ShareReceiver{
 				ShareAmount: shareAmount,
