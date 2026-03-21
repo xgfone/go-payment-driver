@@ -205,12 +205,12 @@ type (
 	}
 )
 
-func (r *CreatePaymentRequest) GetTimeout() time.Duration {
+func (r *CreatePaymentRequest) GetExpiresIn() time.Duration {
 	return cmp.Or(r.ExpiresIn, DefaultExpiresIn)
 }
 
 func (r *CreatePaymentRequest) ExipredAt() time.Time {
-	return timex.Now().Add(r.GetTimeout())
+	return timex.Now().Add(r.GetExpiresIn())
 }
 
 // Refund
