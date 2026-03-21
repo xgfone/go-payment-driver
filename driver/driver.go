@@ -19,6 +19,7 @@ import (
 	"cmp"
 	"context"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/xgfone/go-toolkit/codeint"
@@ -234,6 +235,16 @@ type Metadata struct {
 	// The ISO 4127 currency list supported by the payment channel driver,
 	// for example, ["USD"], ["CNY"], ["USD", "CNY"].
 	Currencies []string
+}
+
+// CurrencyIsSupported reports whether the currency is supported by the payment channel driver.
+func (md *Metadata) CurrencyIsSupported(currencyCode string) bool {
+	return slices.Contains(md.Currencies, currencyCode)
+}
+
+// ChannelIsSupported reports whether the channel is supported by the payment channel driver.
+func (md *Metadata) ChannelIsSupported(channel string) bool {
+	return slices.Contains(md.Channels, channel)
 }
 
 type Driver interface {
