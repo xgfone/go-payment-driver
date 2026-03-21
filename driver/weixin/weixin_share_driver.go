@@ -26,6 +26,9 @@ import (
 	"github.com/xgfone/go-toolkit/runtimex"
 )
 
+// https://pay.wechatpay.cn/doc/v3/merchant/4012067962
+// https://pay.wechatpay.cn/doc/v3/merchant/4012524936 ApplyShare
+
 var _ share.Sharer = &_Driver{}
 
 // If the balance is insufficient, return driver.ErrBalanceInsufficient.
@@ -56,8 +59,8 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 		Appid:     &d.config.Appid,
 		Receivers: receivers,
 
-		OutOrderNo:      &req.ShareNo,
-		TransactionId:   &req.ChannelTradeNo,
+		OutOrderNo:      &req.ShareId,
+		TransactionId:   &req.ChannelPaymentId,
 		UnfreezeUnsplit: &req.UnfreezeUnsplit,
 	})
 
@@ -85,8 +88,8 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (info share.ShareInfo, ok bool, err error) {
 	svc := profitsharing.OrdersApiService{Client: d.client}
 	resp, result, err := svc.QueryOrder(ctx, profitsharing.QueryOrderRequest{
-		OutOrderNo:    &req.ShareNo,
-		TransactionId: &req.ChannelTradeNo,
+		OutOrderNo:    &req.ShareId,
+		TransactionId: &req.ChannelPaymentId,
 	})
 	if result != nil && result.Response != nil {
 		result.Response.Body.Close()
@@ -120,9 +123,9 @@ func (d *_Driver) ReturnShare(ctx context.Context, req share.ReturnShareRequest)
 	svc := profitsharing.ReturnOrdersApiService{Client: d.client}
 	resp, result, err := svc.CreateReturnOrder(ctx, profitsharing.CreateReturnOrderRequest{
 		Amount:      &req.ReturnAmount,
-		OrderId:     &req.ChannelShareNo,
-		OutOrderNo:  &req.ShareNo,
-		OutReturnNo: &req.ReturnNo,
+		OrderId:     &req.ChannelShareId,
+		OutOrderNo:  &req.ShareId,
+		OutReturnNo: &req.ReturnId,
 		Description: &req.ReturnDesc,
 		ReturnMchid: &req.ReturnAccount,
 	})
@@ -144,8 +147,8 @@ func (d *_Driver) ReturnShare(ctx context.Context, req share.ReturnShareRequest)
 func (d *_Driver) QueryReturn(ctx context.Context, req share.QueryReturnRequest) (info share.ReturnInfo, ok bool, err error) {
 	svc := profitsharing.ReturnOrdersApiService{Client: d.client}
 	resp, result, err := svc.QueryReturnOrder(ctx, profitsharing.QueryReturnOrderRequest{
-		OutOrderNo:  &req.ShareNo,
-		OutReturnNo: &req.ReturnNo,
+		OutOrderNo:  &req.ShareId,
+		OutReturnNo: &req.ReturnId,
 	})
 	if result != nil && result.Response != nil {
 		result.Response.Body.Close()
@@ -241,9 +244,9 @@ func (d *_Driver) parseShareInfo(resp *profitsharing.OrdersEntity) (info share.S
 		return
 	}
 
-	info.ShareNo = runtimex.Indirect(resp.OutOrderNo)
-	info.ChannelShareNo = runtimex.Indirect(resp.OrderId)
-	info.ChannelTradeNo = runtimex.Indirect(resp.TransactionId)
+	info.ShareId = runtimex.Indirect(resp.OutOrderNo)
+	info.ChannelShareId = runtimex.Indirect(resp.OrderId)
+	info.ChannelPaymentId = runtimex.Indirect(resp.TransactionId)
 
 	switch s := runtimex.Indirect(resp.State); s {
 	case "PROCESSING":
@@ -308,11 +311,12 @@ func (d *_Driver) parseShareReturnInfo(resp *profitsharing.ReturnOrdersEntity) (
 		return
 	}
 
-	info.ShareNo = runtimex.Indirect(resp.OutOrderNo)
-	info.ChannelShareNo = runtimex.Indirect(resp.OrderId)
+	info.ShareId = runtimex.Indirect(resp.OutOrderNo)
+	info.ReturnId = runtimex.Indirect(resp.OutReturnNo)
+	info.PaymentId = "" // Keep empty
 
-	info.ReturnNo = runtimex.Indirect(resp.OutReturnNo)
-	info.ChannelReturnNo = runtimex.Indirect(resp.ReturnId)
+	info.ChannelShareId = runtimex.Indirect(resp.OrderId)
+	info.ChannelReturnId = runtimex.Indirect(resp.ReturnId)
 
 	info.ReturnAmount = runtimex.Indirect(resp.Amount)
 	info.ReturnAccount = runtimex.Indirect(resp.ReturnMchid)

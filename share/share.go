@@ -43,15 +43,16 @@ type (
 // Share
 type (
 	QueryShareRequest struct {
-		ShareNo        string `json:",omitzero"`
-		TradeNo        string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		ShareId          string `json:",omitzero"`
+		PaymentId        string `json:",omitzero"`
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
 	ApplyShareRequest struct {
-		ShareNo         string
-		TradeNo         string
-		ChannelTradeNo  string
+		ShareId          string
+		PaymentId        string
+		ChannelPaymentId string
+
 		ShareReceivers  []ShareReceiver `json:",omitzero"`
 		UnfreezeUnsplit bool            `json:",omitzero"`
 	}
@@ -68,9 +69,9 @@ type (
 	}
 
 	ShareInfo struct {
-		ShareNo        string `json:",omitzero"`
-		ChannelShareNo string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		ShareId          string `json:",omitzero"`
+		ChannelShareId   string `json:",omitzero"`
+		ChannelPaymentId string `json:",omitzero"`
 
 		ShareRecords []ShareRecord `json:",omitzero"`
 		ShareStatus  Status        `json:",omitzero"`
@@ -94,12 +95,12 @@ type (
 // Return
 type (
 	ReturnShareRequest struct {
-		TradeNo  string `json:",omitzero"`
-		ShareNo  string `json:",omitzero"`
-		ReturnNo string `json:",omitzero"`
+		ShareId   string `json:",omitzero"`
+		ReturnId  string `json:",omitzero"`
+		PaymentId string `json:",omitzero"`
 
-		ChannelShareNo string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		ChannelShareId   string `json:",omitzero"`
+		ChannelPaymentId string `json:",omitzero"`
 
 		ReturnAccount string `json:",omitzero"`
 		ReturnAmount  int64  // the smallest currency unit, such as Cent
@@ -107,18 +108,18 @@ type (
 	}
 
 	QueryReturnRequest struct {
-		TradeNo  string `json:",omitzero"`
-		ShareNo  string `json:",omitzero"`
-		ReturnNo string `json:",omitzero"`
+		ShareId   string `json:",omitzero"`
+		ReturnId  string `json:",omitzero"`
+		PaymentId string `json:",omitzero"`
 	}
 
 	ReturnInfo struct {
-		TradeNo  string `json:",omitzero"`
-		ShareNo  string `json:",omitzero"`
-		ReturnNo string `json:",omitzero"`
+		ShareId   string `json:",omitzero"`
+		ReturnId  string `json:",omitzero"`
+		PaymentId string `json:",omitzero"`
 
-		ChannelShareNo  string `json:",omitzero"`
-		ChannelReturnNo string `json:",omitzero"`
+		ChannelShareId  string `json:",omitzero"`
+		ChannelReturnId string `json:",omitzero"`
 
 		ReturnAmount  int64  `json:",omitzero"` // the smallest currency unit, such as Cent
 		ReturnAccount string `json:",omitzero"`

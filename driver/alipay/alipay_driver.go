@@ -131,6 +131,10 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
+func (d *_Driver) Currency() currency.Currency {
+	return currency.CNY
+}
+
 func (d *_Driver) FormatMinorToMajor(minorAmount int64) (string, error) {
 	return currency.CNY.FormatMinorToMajor(minorAmount)
 }
@@ -139,17 +143,17 @@ func (d *_Driver) ParseMajorToMinor(majorAmount string) (int64, error) {
 	return currency.CNY.ParseMajorToMinor(majorAmount)
 }
 
-func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
-	if !d.metadata.CurrencyIsSupported(r.TradeCurrency) {
-		return fmt.Errorf("not supported currency '%s'", r.TradeCurrency)
+func (d *_Driver) CheckCreateTradeRequest(r *driver.CreatePaymentRequest) (err error) {
+	if !d.metadata.CurrencyIsSupported(r.PaymentCurrency) {
+		return fmt.Errorf("not supported currency '%s'", r.PaymentCurrency)
 	}
 
 	return
 }
 
-func (d *_Driver) CheckRefundTradeRequest(r *driver.RefundTradeRequest) (err error) {
-	if !d.metadata.CurrencyIsSupported(r.RefundCurrency) {
-		return fmt.Errorf("not supported currency '%s'", r.RefundCurrency)
+func (d *_Driver) CheckRefundTradeRequest(r *driver.CreateRefundRequest) (err error) {
+	if !d.metadata.CurrencyIsSupported(r.PaymentCurrency) {
+		return fmt.Errorf("not supported currency '%s'", r.PaymentCurrency)
 	}
 
 	return

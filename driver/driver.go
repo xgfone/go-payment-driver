@@ -32,11 +32,12 @@ var (
 	ErrBadRequest          = codeint.ErrBadRequest
 	ErrUnsupported         = codeint.ErrUnsupported
 	ErrBalanceInsufficient = codeint.ErrInsufficientBalance
-	ErrTooSmallTradeAmount = ErrUnallowed.WithReason("trade amount is too small")
-	ErrTradeRefundedFully  = ErrUnallowed.WithReason("trade has been refunded fully")
+
+	ErrPaymentRefundedFully  = ErrUnallowed.WithReason("payment has been refunded fully")
+	ErrTooSmallPaymentAmount = ErrUnallowed.WithReason("payment amount is too small")
 )
 
-const DefaultTimeout = time.Minute * 5
+const DefaultExpiresIn = time.Minute * 5
 
 const (
 	TaskStatusClosed     TaskStatus = "Closed"
@@ -55,134 +56,281 @@ type (
 	TaskStatus string
 )
 
-// Trade
+// Payment
 type (
-	CreateTradeRequest struct {
-		// Required.
-		TradeNo       string `json:",omitzero"`
-		TradeDesc     string `json:",omitzero"`
-		TradeAmount   int64  `json:",omitzero"` // the smallest currency unit, such as Cent
-		TradeCurrency string `json:",omitzero"`
-		CallbackUrl   string `json:",omitzero"`
+	CreatePaymentRequest struct {
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
 
-		Timeout time.Duration `json:",omitzero"`
+		// Payment description information
+		PaymentDesc string `json:",omitzero"`
 
-		// Optional.
-		OpenId   string `json:",omitzero"`
+		// Payment amount, in the smallest currency unit of the payment currency, such as cents.
+		PaymentAmount int64 `json:",omitzero"`
+
+		// Payment currency, following ISO 4217 standard, all uppercase.
+		PaymentCurrency string `json:",omitzero"`
+
+		// Success callback URL passed to the payment provider when creating a payment.
+		//
+		// That is, after payment is successful, the payment provider should notify
+		// the payment result to this callback URL as much as possible.
+		//
+		// If the payment provider does not support callbacks, for example,
+		// the payment provider uses Webhook notifications,
+		// the driver implementation should ignore it.
+		CallbackUrl string `json:",omitzero"`
+
+		// Payment validity period, after which the payment will automatically
+		// become invalid or automatically close.
+		//
+		// Note: If the payment provider does not support automatic invalidation
+		// or automatic closing, the driver implementation should ignore it.
+		ExpiresIn time.Duration `json:",omitzero"`
+
+		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
+		OpenId string `json:",omitzero"`
+
+		// Buyer's IP address when creating the payment.
+		//
+		// Note: Jialian Payment or WeChat H5 payment requires this parameter.
 		ClientIp string `json:",omitzero"`
-		ExtInfo  any    `json:",omitzero"`
 
+		// Extended information for specific information required
+		// by specific payment providers.
+		ExtInfo any `json:",omitzero"`
+
+		// Whether to enable profit sharing when creating a payment.
+		//
+		// Note: For WeChat Pay, if profit sharing is needed, it requires
+		// that the profit sharing flag must be set when creating the payment.
 		Share bool `json:",omitzero"`
 	}
 
-	CancelTradeRequest struct {
-		OpenId  string `json:",omitzero"`
-		TradeNo string `json:",omitzero"`
+	CancelPaymentRequest struct {
+		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
+		OpenId string `json:",omitzero"`
 
-		ChannelData    string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
+
+		// Payment information on the payment provider side.
+		//
+		// For example: XiaoHongShu local guaranteed transactions require
+		// filling in product information, so payment-related product
+		// information can be put into this field.
+		ChannelData string `json:",omitzero"`
+
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
-	QueryTradeRequest struct {
-		OpenId  string `json:",omitzero"`
-		TradeNo string `json:",omitzero"`
+	QueryPaymentRequest struct {
+		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
+		OpenId string `json:",omitzero"`
 
-		ChannelData    string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
+
+		// Payment information on the payment provider side.
+		//
+		// For example: XiaoHongShu local guaranteed transactions require
+		// filling in product information, so payment-related product
+		// information can be put into this field.
+		ChannelData string `json:",omitzero"`
+
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
-	LinkInfo struct {
+	PayLinkInfo struct {
+		// Link returned to the frontend for user payment.
 		PayLink string `json:",omitzero"`
 
-		ChannelData    string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		// Payment information on the payment provider side.
+		//
+		// Note: This field can be used for subsequent payment query or cancellation.
+		ChannelData string `json:",omitzero"`
+
+		// Unique payment id corresponding to the payment provider side.
+		//
+		// Note: If the payment provider does not provide this information
+		// when creating the payment, this field can be ignored.
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
-	TradeInfo struct {
-		TradeNo       string `json:",omitzero"`
-		TradeAmount   int64  `json:",omitzero"` // the smallest currency unit, such as Cent
-		TradeCurrency string `json:",omitzero"`
+	PaymentInfo struct {
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
 
-		ChannelTradeNo string `json:",omitzero"`
-		ChannelStatus  string `json:",omitzero"`
-		ChannelData    string `json:",omitzero"` // such as BankType
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 
-		PayerId      string    `json:",omitzero"`
-		PaidCurrency string    `json:",omitzero"`
-		PaidAmount   int64     `json:",omitzero"` // the smallest currency unit, such as Cent
-		PaidAt       time.Time `json:",omitzero"`
+		// Original value of the payment status on the payment provider side.
+		ChannelStatus string `json:",omitzero"`
 
-		IsRefunded bool       `json:",omitzero"`
-		FailReason string     `json:",omitzero"`
+		// Additional payment information on the payment provider side,
+		// such as BankType.
+		//
+		// Note: Generally uniformly encoded in JSON.
+		ChannelData string `json:",omitzero"`
+
+		// Unique ID of the paying user on the payment provider side,
+		// or other ID that can uniquely identify the paying user.
+		PayerId string `json:",omitzero"`
+
+		// Currency used by the user for payment, following ISO 4217 standard.
+		PayerPaidCurrency string `json:",omitzero"`
+
+		// Actual amount paid by the user, in the smallest currency unit, such as Cent.
+		PayerPaidAmount int64 `json:",omitzero"`
+
+		// Time when the user actually completed the payment on the payment provider side.
+		PayerPaidAt time.Time `json:",omitzero"`
+
+		// Whether the current payment has been fully refunded.
+		IsRefunded bool `json:",omitzero"`
+
+		// If payment fails, it indicates the reason for failure on the payment provider side.
+		//
+		// Note: If the payment provider does not support this information,
+		// the driver implementation can ignore it.
+		FailReason string `json:",omitzero"`
+
+		// Current task status of the payment.
 		TaskStatus TaskStatus `json:",omitzero"`
 	}
 )
 
-func (r *CreateTradeRequest) GetTimeout() time.Duration {
-	return cmp.Or(r.Timeout, DefaultTimeout)
+func (r *CreatePaymentRequest) GetTimeout() time.Duration {
+	return cmp.Or(r.ExpiresIn, DefaultExpiresIn)
 }
 
-func (r *CreateTradeRequest) ExipredAt() time.Time {
+func (r *CreatePaymentRequest) ExipredAt() time.Time {
 	return timex.Now().Add(r.GetTimeout())
 }
 
 // Refund
 type (
-	RefundTradeRequest struct {
+	CreateRefundRequest struct {
+		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
 		OpenId string `json:",omitzero"`
 
-		TradeNo     string `json:",omitzero"`
-		TradeAmount int64  `json:",omitzero"` // the smallest currency unit, such as Cent
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
 
-		RefundNo       string `json:",omitzero"`
-		RefundReason   string `json:",omitzero"`
-		RefundAmount   int64  `json:",omitzero"` // the smallest currency unit, such as Cent
-		RefundCurrency string `json:",omitzero"`
-		FundAccount    string `json:",omitzero"`
+		// Payment amount, in the smallest currency unit of the payment currency, such as cents.
+		PaymentAmount int64 `json:",omitzero"`
 
+		// Currency corresponding to the payment amount, following ISO 4217 standard.
+		PaymentCurrency string `json:",omitzero"`
+
+		// Our unique payment refund id.
+		RefundId string `json:",omitzero"`
+
+		// Refund amount, in the smallest currency unit of the payment currency, such as cents.
+		RefundAmount int64 `json:",omitzero"`
+
+		// Refund reason.
+		RefundReason string `json:",omitzero"`
+
+		// Refund success callback URL passed to the payment provider during refund.
+		//
+		// That is, after refund is successful, the payment provider should notify
+		// the refund result to this callback URL as much as possible.
+		//
+		// If the payment provider does not support callbacks,
+		// such as when the payment provider uses Webhook notifications,
+		// the driver implementation should ignore it.
 		CallbackUrl string `json:",omitzero"`
 
-		ChannelData    string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		// Additional payment information on the payment provider side.
+		//
+		// Note: For Xiaohongshu local guaranteed transactions, when refunding,
+		// it is necessary to provide the product information in the original payment,
+		// and the ChannelData field in the payment can be passed as this field.
+		ChannelData string `json:",omitzero"`
+
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
 	QueryRefundRequest struct {
+		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
 		OpenId string `json:",omitzero"`
 
-		TradeNo  string `json:",omitzero"`
-		RefundNo string `json:",omitzero"`
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
 
-		ChannelData    string `json:",omitzero"`
-		ChannelTradeNo string `json:",omitzero"`
+		// Our unique payment refund id.
+		RefundId string `json:",omitzero"`
+
+		// Additional payment information on the payment provider side.
+		//
+		// Note: For Xiaohongshu local guaranteed transactions, when refunding,
+		// it is necessary to provide the product information in the original payment,
+		// and the ChannelData field in the payment can be passed as this field.
+		ChannelData string `json:",omitzero"`
+
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 	}
 
 	RefundInfo struct {
-		TradeNo     string `json:",omitzero"`
-		TradeAmount int64  `json:",omitzero"` // the smallest currency unit, such as Cent
+		// Our unique payment id.
+		PaymentId string `json:",omitzero"`
 
-		RefundNo     string `json:",omitzero"`
+		// Our unique payment refund ID.
+		RefundId string `json:",omitzero"`
+
+		// Refund reason on the payment provider side.
+		//
+		// Note: If the payment provider does not support this parameter,
+		// the driver implementation can ignore it.
 		RefundReason string `json:",omitzero"`
-		RefundAmount int64  `json:",omitzero"` // the smallest currency unit, such as Cent
 
-		ChannelTradeNo  string `json:",omitzero"`
-		ChannelRefundNo string `json:",omitzero"`
-		ChannelStatus   string `json:",omitzero"`
-		ChannelData     string `json:",omitzero"`
+		// Unique payment id corresponding to the payment provider side.
+		ChannelPaymentId string `json:",omitzero"`
 
-		RefundedAt time.Time  `json:",omitzero"`
-		FailReason string     `json:",omitzero"`
+		// Unique refund ID corresponding to the payment provider side.
+		ChannelRefundId string `json:",omitzero"`
+
+		// Original value of the refund status on the payment provider side.
+		ChannelStatus string `json:",omitzero"`
+
+		// Additional refund information on the payment provider side.
+		//
+		// Note: Generally uniformly encoded in JSON.
+		ChannelData string `json:",omitzero"`
+
+		// Time when the payment provider side completed the refund.
+		RefundedAt time.Time `json:",omitzero"`
+
+		// If refund fails, it indicates the reason for failure on the payment provider side.
+		//
+		// Note: If the payment provider does not support this information,
+		// the driver implementation can ignore it.
+		FailReason string `json:",omitzero"`
+
+		// Current task status of the refund operation.
 		TaskStatus TaskStatus `json:",omitzero"`
 	}
 )
 
-func (r RefundTradeRequest) QueryRefundRequest() QueryRefundRequest {
+func (r CreateRefundRequest) QueryRefundRequest() QueryRefundRequest {
 	return QueryRefundRequest{
 		OpenId: r.OpenId,
 
-		TradeNo:  r.TradeNo,
-		RefundNo: r.RefundNo,
+		RefundId:  r.RefundId,
+		PaymentId: r.PaymentId,
 
-		ChannelTradeNo: r.ChannelTradeNo,
+		ChannelData:      r.ChannelData,
+		ChannelPaymentId: r.ChannelPaymentId,
 	}
 }
 
@@ -250,22 +398,22 @@ func (md *Metadata) ChannelIsSupported(channel string) bool {
 type Driver interface {
 	Metadata() Metadata
 
-	CreateTrade(ctx context.Context, req CreateTradeRequest) (info LinkInfo, err error)
-	QueryTrade(ctx context.Context, req QueryTradeRequest) (info TradeInfo, ok bool, err error)
+	CreatePayment(ctx context.Context, req CreatePaymentRequest) (info PayLinkInfo, err error)
+	QueryPayment(ctx context.Context, req QueryPaymentRequest) (info PaymentInfo, ok bool, err error)
 
 	// If has paid, return ErrPaid
-	// If the trade has been canceled, return nil.
-	CancelTrade(ctx context.Context, req CancelTradeRequest) (err error)
+	// If the payment has been canceled, return nil.
+	CancelPayment(ctx context.Context, req CancelPaymentRequest) (err error)
 
-	// If the trade has been fully refunded, return ErrTradeRefundedFully.
+	// If the payment has been fully refunded, return ErrPaymentRefundedFully.
 	// If the balance is insufficient, return ErrBalanceInsufficient.
-	// If it's not allowed to refund the trade, return ErrUnallowed.
-	RefundTrade(ctx context.Context, req RefundTradeRequest) (info RefundInfo, err error)
+	// If it's not allowed to refund the payment, return ErrUnallowed.
+	RefundPayment(ctx context.Context, req CreateRefundRequest) (info RefundInfo, err error)
 	QueryRefund(ctx context.Context, req QueryRefundRequest) (info RefundInfo, ok bool, err error)
 
-	ParseTradeCallbackRequest(ctx context.Context, r *http.Request) (info TradeInfo, err error)
-	SendTradeCallbackResponse(ctx context.Context, w http.ResponseWriter, err error)
+	ParsePaymentCallbackRequest(ctx context.Context, req *http.Request) (info PaymentInfo, err error)
+	ParseRefundCallbackRequest(ctx context.Context, req *http.Request) (info RefundInfo, err error)
 
-	ParseRefundCallbackRequest(ctx context.Context, r *http.Request) (info RefundInfo, err error)
-	SendRefundCallbackResponse(ctx context.Context, w http.ResponseWriter, err error)
+	SendPaymentCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
+	SendRefundCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
 }

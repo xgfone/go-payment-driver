@@ -38,8 +38,8 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 	}
 
 	_req := alipay.NewPayload("alipay.trade.order.settle")
-	_req.AddBizField("out_request_no", req.ShareNo)
-	_req.AddBizField("trade_no", req.ChannelTradeNo)
+	_req.AddBizField("out_request_no", req.ShareId)
+	_req.AddBizField("trade_no", req.ChannelPaymentId)
 
 	type (
 		ExtendParams struct {
@@ -126,21 +126,21 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 		return
 	}
 
-	info.ShareNo = req.ShareNo
-	info.ChannelTradeNo = rsp.TradeNo
-	info.ChannelShareNo = rsp.SettleNo
+	info.ShareId = req.ShareId
+	info.ChannelShareId = rsp.SettleNo
+	info.ChannelPaymentId = rsp.TradeNo
 
 	if info.ShareStatus == share.StatusFinished {
 		req := share.QueryShareRequest{
-			TradeNo:        req.TradeNo,
-			ShareNo:        info.ShareNo,
-			ChannelTradeNo: info.ChannelShareNo,
+			ShareId:          info.ShareId,
+			PaymentId:        req.PaymentId,
+			ChannelPaymentId: info.ChannelPaymentId,
 		}
 		_info, ok, err := d.QueryShare(ctx, req)
 		if err != nil || !ok {
 			info.ShareStatus = share.StatusProcessing
 		} else {
-			_info.ChannelShareNo = info.ChannelShareNo
+			_info.ChannelShareId = info.ChannelShareId
 			info = _info
 		}
 	}
@@ -150,8 +150,8 @@ func (d *_Driver) ApplyShare(ctx context.Context, req share.ApplyShareRequest) (
 
 func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (info share.ShareInfo, ok bool, err error) {
 	_req := alipay.NewPayload("alipay.trade.order.settle.query")
-	_req.AddBizField("out_request_no", req.ShareNo)
-	_req.AddBizField("trade_no", req.ChannelTradeNo)
+	_req.AddBizField("out_request_no", req.ShareId)
+	_req.AddBizField("trade_no", req.ChannelPaymentId)
 
 	type Detail struct {
 		alipay.Error
@@ -194,9 +194,9 @@ func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (
 		return
 	}
 
-	info.ShareNo = rsp.OutRequestNo
-	info.ChannelTradeNo = req.ChannelTradeNo
+	info.ShareId = rsp.OutRequestNo
 	info.ShareStatus = share.StatusFinished
+	info.ChannelPaymentId = req.ChannelPaymentId
 
 	optime, _ := time.ParseInLocation(time.DateTime, rsp.OperatedAt, time.Local)
 	info.ShareRecords = make([]share.ShareRecord, len(rsp.ShareDetails))
@@ -269,11 +269,11 @@ func (d *_Driver) QueryShare(ctx context.Context, req share.QueryShareRequest) (
 func (d *_Driver) ReturnShare(ctx context.Context, req share.ReturnShareRequest) (info share.ReturnInfo, err error) {
 	now := timex.Now()
 	info = share.ReturnInfo{
-		ShareNo:        req.ShareNo,
-		ChannelShareNo: req.ChannelShareNo,
+		ShareId:  req.ShareId,
+		ReturnId: req.ReturnId,
 
-		ReturnNo:        req.ReturnNo,
-		ChannelReturnNo: "",
+		ChannelShareId:  req.ChannelShareId,
+		ChannelReturnId: "",
 
 		ReturnAmount:  req.ReturnAmount,
 		ReturnAccount: req.ReturnAccount,
@@ -293,8 +293,8 @@ func (d *_Driver) ReturnShare(ctx context.Context, req share.ReturnShareRequest)
 func (d *_Driver) QueryReturn(ctx context.Context, req share.QueryReturnRequest) (info share.ReturnInfo, ok bool, err error) {
 	now := timex.Now()
 	info = share.ReturnInfo{
-		ShareNo:  req.ShareNo,
-		ReturnNo: req.ReturnNo,
+		ShareId:  req.ShareId,
+		ReturnId: req.ReturnId,
 
 		ReturnResult: share.ResultSuccess,
 		FailReason:   "",

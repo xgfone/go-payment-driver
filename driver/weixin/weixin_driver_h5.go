@@ -36,17 +36,17 @@ func init() {
 
 type H5Driver struct{ _Driver }
 
-func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest) (info driver.LinkInfo, err error) {
+func (d *H5Driver) CreatePayment(ctx context.Context, req driver.CreatePaymentRequest) (info driver.PayLinkInfo, err error) {
 	// If passing OpenId, we think that it is from WeChat MiniProgram or Browser.
-	if r.OpenId != "" {
-		return (*JsapiDriver)(d).CreateTrade(ctx, r)
+	if req.OpenId != "" {
+		return (*JsapiDriver)(d).CreatePayment(ctx, req)
 	}
 
-	if err = d.CheckCreateTradeRequest(&r); err != nil {
+	if err = d.CheckCreatePaymentRequest(&req); err != nil {
 		return
 	}
 
-	if r.ClientIp == "" {
+	if req.ClientIp == "" {
 		err = driver.ErrBadRequest.WithReason("missing ClientIp")
 		return
 	}
@@ -55,27 +55,26 @@ func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest)
 		d.config.H5Type = "Wap"
 	}
 
-	expiretime := r.ExipredAt()
-
+	expiretime := req.ExipredAt()
 	svc := h5.H5ApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, h5.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
 		Mchid: core.String(d.config.Mchid), // 直连商户号
 
-		Description: &r.TradeDesc,   // 商品描述
-		OutTradeNo:  &r.TradeNo,     // 商户订单号
-		TimeExpire:  &expiretime,    // 订单失效时间，格式为rfc3339格式
-		NotifyUrl:   &r.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
+		Description: &req.PaymentDesc, // 商品描述
+		OutTradeNo:  &req.PaymentId,   // 商户订单号
+		TimeExpire:  &expiretime,      // 订单失效时间，格式为rfc3339格式
+		NotifyUrl:   &req.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
 
 		Attach: nil, // 附加数据
 		Amount: &h5.Amount{
-			Total:    &r.TradeAmount,   // 订单总金额，单位为分
-			Currency: &r.TradeCurrency, // CNY：人民币，境内商户号仅支持人民币。
+			Total:    &req.PaymentAmount,   // 订单总金额，单位为分
+			Currency: &req.PaymentCurrency, // CNY：人民币，境内商户号仅支持人民币。
 		},
 
-		SettleInfo: &h5.SettleInfo{ProfitSharing: &r.Share},
+		SettleInfo: &h5.SettleInfo{ProfitSharing: &req.Share},
 		SceneInfo: &h5.SceneInfo{
-			PayerClientIp: &r.ClientIp,
+			PayerClientIp: &req.ClientIp,
 			H5Info: &h5.H5Info{
 				Type: &d.config.H5Type,
 			},
@@ -91,10 +90,10 @@ func (d *H5Driver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest)
 	return
 }
 
-func (d *H5Driver) QueryTrade(ctx context.Context, query driver.QueryTradeRequest) (info driver.TradeInfo, ok bool, err error) {
+func (d *H5Driver) QueryPayment(ctx context.Context, req driver.QueryPaymentRequest) (info driver.PaymentInfo, ok bool, err error) {
 	svc := h5.H5ApiService{Client: d.client}
 	resp, result, err := svc.QueryOrderByOutTradeNo(ctx, h5.QueryOrderByOutTradeNoRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 
@@ -114,19 +113,16 @@ func (d *H5Driver) QueryTrade(ctx context.Context, query driver.QueryTradeReques
 	}
 
 	info = d.parsePayRequest(resp)
-	if info.TradeNo == "" {
-		info.TradeNo = query.TradeNo
-	}
 	ok = true
 	return
 }
 
 // If has paid, return ErrPaid
-// If the trade has been canceled, return nil.
-func (d *H5Driver) CancelTrade(ctx context.Context, query driver.CancelTradeRequest) (err error) {
+// If the payment has been canceled, return nil.
+func (d *H5Driver) CancelPayment(ctx context.Context, req driver.CancelPaymentRequest) (err error) {
 	svc := h5.H5ApiService{Client: d.client}
 	result, err := svc.CloseOrder(ctx, h5.CloseOrderRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 	if result != nil && result.Response != nil {

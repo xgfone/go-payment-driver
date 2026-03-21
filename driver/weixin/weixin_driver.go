@@ -109,14 +109,14 @@ type _Driver struct {
 	metadata driver.Metadata
 }
 
-func (d *_Driver) CheckCreateTradeRequest(r *driver.CreateTradeRequest) (err error) {
-	if r.Share && r.TradeAmount < 10 {
-		return driver.ErrTooSmallTradeAmount
+func (d *_Driver) CheckCreatePaymentRequest(r *driver.CreatePaymentRequest) (err error) {
+	if r.Share && r.PaymentAmount < 10 {
+		return driver.ErrTooSmallPaymentAmount
 	}
 
-	r.TradeCurrency = cmp.Or(r.TradeCurrency, defaultCurrency)
-	if r.TradeCurrency != "CNY" {
-		return errors.New("trade currency is not CNY")
+	r.PaymentCurrency = cmp.Or(r.PaymentCurrency, defaultCurrency)
+	if r.PaymentCurrency != "CNY" {
+		return errors.New("payment currency is not CNY")
 	}
 
 	return
@@ -128,7 +128,7 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
-func (d *_Driver) ParseTradeCallbackRequest(ctx context.Context, r *http.Request) (info driver.TradeInfo, err error) {
+func (d *_Driver) ParsePaymentCallbackRequest(ctx context.Context, r *http.Request) (info driver.PaymentInfo, err error) {
 	var trans payments.Transaction
 	_, err = d.handler.ParseNotifyRequest(ctx, r, &trans)
 	if err == nil {
@@ -147,7 +147,7 @@ func (d *_Driver) ParseRefundCallbackRequest(ctx context.Context, r *http.Reques
 	return
 }
 
-func (d *_Driver) SendTradeCallbackResponse(_ context.Context, w http.ResponseWriter, err error) {
+func (d *_Driver) SendPaymentCallbackResponse(_ context.Context, w http.ResponseWriter, err error) {
 	d.sendCallbackResponse(w, err)
 }
 
@@ -164,33 +164,23 @@ func (d *_Driver) sendCallbackResponse(w http.ResponseWriter, err error) {
 	}
 }
 
-// If the trade has been fully refunded, return ErrTradeRefundedFully.
+// If the payment has been fully refunded, return ErrPaymentRefundedFully.
 // If the balance is insufficient, return ErrBalanceInsufficient.
-// If it's not allowed to refund the trade, return ErrUnallowed.
-func (d *_Driver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) (info driver.RefundInfo, err error) {
-	var rundaccount *refunddomestic.ReqFundsAccount
-	switch r.FundAccount {
-	case "":
-	case "AVAILABLE":
-		rundaccount = refunddomestic.REQFUNDSACCOUNT_AVAILABLE.Ptr()
-	default:
-		err = fmt.Errorf("unsupported FundAccount '%s', only support 'AVAILABLE'", r.FundAccount)
-		return
-	}
-
+// If it's not allowed to refund the payment, return ErrUnallowed.
+func (d *_Driver) RefundPayment(ctx context.Context, req driver.CreateRefundRequest) (info driver.RefundInfo, err error) {
 	svc := refunddomestic.RefundsApiService{Client: d.client}
 	resp, result, err := svc.Create(ctx, refunddomestic.CreateRequest{
 		TransactionId: nil,
-		OutTradeNo:    &r.TradeNo,
-		OutRefundNo:   &r.RefundNo,
-		NotifyUrl:     &r.CallbackUrl,
-		Reason:        &r.RefundReason,
-		FundsAccount:  rundaccount,
+		OutTradeNo:    &req.PaymentId,
+		OutRefundNo:   &req.RefundId,
+		NotifyUrl:     &req.CallbackUrl,
+		Reason:        &req.RefundReason,
+		FundsAccount:  nil,
 
 		Amount: &refunddomestic.AmountReq{
-			Refund:   &r.RefundAmount,   // 本次退款的总金额
-			Total:    &r.TradeAmount,    // 原订单支付的总金额
-			Currency: &r.RefundCurrency, // 目前只支持人民币：CNY
+			Refund:   &req.RefundAmount,    // 本次退款的总金额
+			Total:    &req.PaymentAmount,   // 原订单支付的总金额
+			Currency: &req.PaymentCurrency, // 目前只支持人民币：CNY
 		},
 	})
 	if result != nil && result.Response != nil {
@@ -206,7 +196,7 @@ func (d *_Driver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) 
 				err = driver.ErrUnallowed.WithReasonf("%s: %s", e.Code, e.Message)
 
 			case e.Code == "INVALID_REQUEST" && strings.Contains(e.Message, "已全额退款"):
-				err = driver.ErrTradeRefundedFully
+				err = driver.ErrPaymentRefundedFully
 
 			default:
 				err = fmt.Errorf("%s: %s", e.Code, e.Message)
@@ -216,16 +206,13 @@ func (d *_Driver) RefundTrade(ctx context.Context, r driver.RefundTradeRequest) 
 	}
 
 	info = d.parseRefundRequest(resp)
-	if info.TradeNo == "" {
-		info.TradeNo = r.TradeNo
-	}
 	return
 }
 
 func (d *_Driver) QueryRefund(ctx context.Context, query driver.QueryRefundRequest) (info driver.RefundInfo, ok bool, err error) {
 	svc := refunddomestic.RefundsApiService{Client: d.client}
 	resp, result, err := svc.QueryByOutRefundNo(ctx, refunddomestic.QueryByOutRefundNoRequest{
-		OutRefundNo: &query.RefundNo,
+		OutRefundNo: &query.RefundId,
 	})
 	if result != nil && result.Response != nil {
 		result.Response.Body.Close()
@@ -247,7 +234,7 @@ func (d *_Driver) QueryRefund(ctx context.Context, query driver.QueryRefundReque
 	return
 }
 
-func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.TradeInfo) {
+func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.PaymentInfo) {
 	if trans == nil {
 		return
 	}
@@ -266,20 +253,17 @@ func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.Trad
 		fallthrough
 
 	case "SUCCESS":
-		info.TradeNo = runtimex.Indirect(trans.OutTradeNo)
+		info.PaymentId = runtimex.Indirect(trans.OutTradeNo)
 
 		if trans.SuccessTime != nil {
-			info.PaidAt, _ = time.Parse(time.RFC3339, *trans.SuccessTime)
+			info.PayerPaidAt, _ = time.Parse(time.RFC3339, *trans.SuccessTime)
 		}
 		if trans.Payer != nil {
 			info.PayerId = runtimex.Indirect(trans.Payer.Openid)
 		}
 		if trans.Amount != nil {
-			info.TradeAmount = runtimex.Indirect(trans.Amount.Total)
-			info.TradeCurrency = runtimex.Indirect(trans.Amount.Currency)
-
-			info.PaidAmount = runtimex.Indirect(trans.Amount.PayerTotal)
-			info.PaidCurrency = runtimex.Indirect(trans.Amount.PayerCurrency)
+			info.PayerPaidAmount = runtimex.Indirect(trans.Amount.PayerTotal)
+			info.PayerPaidCurrency = runtimex.Indirect(trans.Amount.PayerCurrency)
 		}
 
 		var data ChannelData
@@ -306,7 +290,7 @@ func (d *_Driver) parsePayRequest(trans *payments.Transaction) (info driver.Trad
 		if data.BankType != "" || len(data.Promotions) > 0 {
 			info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 24)
 		}
-		info.ChannelTradeNo = runtimex.Indirect(trans.TransactionId)
+		info.ChannelPaymentId = runtimex.Indirect(trans.TransactionId)
 
 		info.TaskStatus = driver.TaskStatusSuccess
 
@@ -335,16 +319,13 @@ func (d *_Driver) parseRefundRequest(r *refunddomestic.Refund) (info driver.Refu
 	channelDataStr, _ := jsonx.MarshalStringWithCap(channelData, 32)
 
 	info = driver.RefundInfo{
-		TradeNo:     runtimex.Indirect(r.OutTradeNo),
-		TradeAmount: runtimex.Indirect(runtimex.Indirect(r.Amount).Total),
+		PaymentId: runtimex.Indirect(r.OutTradeNo),
+		RefundId:  runtimex.Indirect(r.OutRefundNo),
 
-		RefundNo:     runtimex.Indirect(r.OutRefundNo),
-		RefundAmount: runtimex.Indirect(runtimex.Indirect(r.Amount).PayerRefund),
-
-		ChannelTradeNo:  runtimex.Indirect(r.TransactionId),
-		ChannelRefundNo: runtimex.Indirect(r.RefundId),
-		ChannelStatus:   string(runtimex.Indirect(r.Status)),
-		ChannelData:     channelDataStr,
+		ChannelPaymentId: runtimex.Indirect(r.TransactionId),
+		ChannelRefundId:  runtimex.Indirect(r.RefundId),
+		ChannelStatus:    string(runtimex.Indirect(r.Status)),
+		ChannelData:      channelDataStr,
 
 		RefundedAt: runtimex.Indirect(r.SuccessTime),
 	}

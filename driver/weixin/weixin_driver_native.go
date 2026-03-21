@@ -36,29 +36,29 @@ func init() {
 
 type NativeDriver struct{ _Driver }
 
-func (d *NativeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest) (info driver.LinkInfo, err error) {
-	if err = d.CheckCreateTradeRequest(&r); err != nil {
+func (d *NativeDriver) CreatePayment(ctx context.Context, req driver.CreatePaymentRequest) (info driver.PayLinkInfo, err error) {
+	if err = d.CheckCreatePaymentRequest(&req); err != nil {
 		return
 	}
 
-	expiretime := r.ExipredAt()
+	expiretime := req.ExipredAt()
 	svc := native.NativeApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, native.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
 		Mchid: core.String(d.config.Mchid), // 直连商户号
 
-		Description: &r.TradeDesc,   // 商品描述
-		OutTradeNo:  &r.TradeNo,     // 商户订单号
-		TimeExpire:  &expiretime,    // 订单失效时间，格式为rfc3339格式
-		NotifyUrl:   &r.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
+		Description: &req.PaymentDesc, // 商品描述
+		OutTradeNo:  &req.PaymentId,   // 商户订单号
+		TimeExpire:  &expiretime,      // 订单失效时间，格式为rfc3339格式
+		NotifyUrl:   &req.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
 
 		Attach: nil, // 附加数据
 		Amount: &native.Amount{
-			Total:    &r.TradeAmount,   // 订单总金额，单位为分
-			Currency: &r.TradeCurrency, // CNY：人民币，境内商户号仅支持人民币。
+			Total:    &req.PaymentAmount,   // 订单总金额，单位为分
+			Currency: &req.PaymentCurrency, // CNY：人民币，境内商户号仅支持人民币。
 		},
 
-		SettleInfo: &native.SettleInfo{ProfitSharing: &r.Share},
+		SettleInfo: &native.SettleInfo{ProfitSharing: &req.Share},
 	})
 	if result != nil && result.Response != nil {
 		defer result.Response.Body.Close()
@@ -70,10 +70,10 @@ func (d *NativeDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequ
 	return
 }
 
-func (d *NativeDriver) QueryTrade(ctx context.Context, query driver.QueryTradeRequest) (info driver.TradeInfo, ok bool, err error) {
+func (d *NativeDriver) QueryPayment(ctx context.Context, req driver.QueryPaymentRequest) (info driver.PaymentInfo, ok bool, err error) {
 	svc := native.NativeApiService{Client: d.client}
 	resp, result, err := svc.QueryOrderByOutTradeNo(ctx, native.QueryOrderByOutTradeNoRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 
@@ -93,19 +93,16 @@ func (d *NativeDriver) QueryTrade(ctx context.Context, query driver.QueryTradeRe
 	}
 
 	info = d.parsePayRequest(resp)
-	if info.TradeNo == "" {
-		info.TradeNo = query.TradeNo
-	}
 	ok = true
 	return
 }
 
 // If has paid, return ErrPaid
-// If the trade has been canceled, return nil.
-func (d *NativeDriver) CancelTrade(ctx context.Context, query driver.CancelTradeRequest) (err error) {
+// If the payment has been canceled, return nil.
+func (d *NativeDriver) CancelPayment(ctx context.Context, req driver.CancelPaymentRequest) (err error) {
 	svc := native.NativeApiService{Client: d.client}
 	result, err := svc.CloseOrder(ctx, native.CloseOrderRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 	if result != nil && result.Response != nil {

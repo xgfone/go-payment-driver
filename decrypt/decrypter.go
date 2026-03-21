@@ -31,8 +31,8 @@ const (
 type Request struct {
 	Type string
 
-	TradeInfo  *driver.TradeInfo
-	RefundInfo *driver.RefundInfo
+	PaymentInfo *driver.PaymentInfo
+	RefundInfo  *driver.RefundInfo
 
 	Requery bool
 }

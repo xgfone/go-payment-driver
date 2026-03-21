@@ -37,35 +37,35 @@ func init() {
 
 type JsapiDriver struct{ _Driver }
 
-func (d *JsapiDriver) CreateTrade(ctx context.Context, r driver.CreateTradeRequest) (info driver.LinkInfo, err error) {
-	if err = d.CheckCreateTradeRequest(&r); err != nil {
+func (d *JsapiDriver) CreatePayment(ctx context.Context, req driver.CreatePaymentRequest) (info driver.PayLinkInfo, err error) {
+	if err = d.CheckCreatePaymentRequest(&req); err != nil {
 		return
 	}
 
-	if r.OpenId == "" {
+	if req.OpenId == "" {
 		err = driver.ErrBadRequest.WithReason("missing OpenId")
 		return
 	}
 
-	expiretime := r.ExipredAt()
+	expiretime := req.ExipredAt()
 	svc := jsapi.JsapiApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, jsapi.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
 		Mchid: core.String(d.config.Mchid), // 直连商户号
 
-		Description: &r.TradeDesc,   // 商品描述
-		OutTradeNo:  &r.TradeNo,     // 商户订单号
-		TimeExpire:  &expiretime,    // 订单失效时间，格式为rfc3339格式
-		NotifyUrl:   &r.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
+		Description: &req.PaymentDesc, // 商品描述
+		OutTradeNo:  &req.PaymentId,   // 商户订单号
+		TimeExpire:  &expiretime,      // 订单失效时间，格式为rfc3339格式
+		NotifyUrl:   &req.CallbackUrl, // 必须为直接可访问的URL: 1. HTTPS；2. 不允许携带查询串
 
 		Attach: nil, // 附加数据
 		Amount: &jsapi.Amount{
-			Total:    &r.TradeAmount,   // 订单总金额，单位为分
-			Currency: &r.TradeCurrency, // CNY：人民币，境内商户号仅支持人民币。
+			Total:    &req.PaymentAmount,   // 订单总金额，单位为分
+			Currency: &req.PaymentCurrency, // CNY：人民币，境内商户号仅支持人民币。
 		},
 
-		Payer:      &jsapi.Payer{Openid: &r.OpenId},
-		SettleInfo: &jsapi.SettleInfo{ProfitSharing: &r.Share},
+		Payer:      &jsapi.Payer{Openid: &req.OpenId},
+		SettleInfo: &jsapi.SettleInfo{ProfitSharing: &req.Share},
 	})
 	if result != nil && result.Response != nil {
 		defer result.Response.Body.Close()
@@ -102,10 +102,10 @@ func (d *JsapiDriver) CreateTrade(ctx context.Context, r driver.CreateTradeReque
 	return
 }
 
-func (d *JsapiDriver) QueryTrade(ctx context.Context, query driver.QueryTradeRequest) (info driver.TradeInfo, ok bool, err error) {
+func (d *JsapiDriver) QueryPayment(ctx context.Context, req driver.QueryPaymentRequest) (info driver.PaymentInfo, ok bool, err error) {
 	svc := jsapi.JsapiApiService{Client: d.client}
 	resp, result, err := svc.QueryOrderByOutTradeNo(ctx, jsapi.QueryOrderByOutTradeNoRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 
@@ -125,19 +125,16 @@ func (d *JsapiDriver) QueryTrade(ctx context.Context, query driver.QueryTradeReq
 	}
 
 	info = d.parsePayRequest(resp)
-	if info.TradeNo == "" {
-		info.TradeNo = query.TradeNo
-	}
 	ok = true
 	return
 }
 
 // If has paid, return ErrPaid
-// If the trade has been canceled, return nil.
-func (d *JsapiDriver) CancelTrade(ctx context.Context, query driver.CancelTradeRequest) (err error) {
+// If the payment has been canceled, return nil.
+func (d *JsapiDriver) CancelPayment(ctx context.Context, req driver.CancelPaymentRequest) (err error) {
 	svc := jsapi.JsapiApiService{Client: d.client}
 	result, err := svc.CloseOrder(ctx, jsapi.CloseOrderRequest{
-		OutTradeNo: &query.TradeNo,
+		OutTradeNo: &req.PaymentId,
 		Mchid:      core.String(d.config.Mchid),
 	})
 	if result != nil && result.Response != nil {
