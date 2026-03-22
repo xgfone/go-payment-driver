@@ -277,6 +277,9 @@ type (
 		// and the ChannelData field in the payment can be passed as this field.
 		ChannelData string `json:",omitzero"`
 
+		// Unique refund ID corresponding to the payment provider side.
+		ChannelRefundId string `json:",omitzero"`
+
 		// Unique payment id corresponding to the payment provider side.
 		ChannelPaymentId string `json:",omitzero"`
 	}
@@ -297,7 +300,7 @@ type (
 		// Unique payment id corresponding to the payment provider side.
 		//
 		// Deprecated. No longer recommended for use.
-		// ChannelPaymentId string `json:",omitzero"`
+		ChannelPaymentId string `json:",omitzero"`
 
 		// Unique refund ID corresponding to the payment provider side.
 		ChannelRefundId string `json:",omitzero"`
