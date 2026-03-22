@@ -42,7 +42,7 @@ func (d *AppDriver) CreatePayment(ctx context.Context, req driver.CreatePaymentR
 		return
 	}
 
-	expiretime := req.ExipredAt()
+	expiretime := req.GetExipredAt()
 	svc := app.AppApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, app.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID

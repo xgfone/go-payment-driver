@@ -47,7 +47,7 @@ func (d *JsapiDriver) CreatePayment(ctx context.Context, req driver.CreatePaymen
 		return
 	}
 
-	expiretime := req.ExipredAt()
+	expiretime := req.GetExipredAt()
 	svc := jsapi.JsapiApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, jsapi.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID

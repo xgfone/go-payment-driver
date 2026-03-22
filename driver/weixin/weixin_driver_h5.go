@@ -55,7 +55,7 @@ func (d *H5Driver) CreatePayment(ctx context.Context, req driver.CreatePaymentRe
 		d.config.H5Type = "Wap"
 	}
 
-	expiretime := req.ExipredAt()
+	expiretime := req.GetExipredAt()
 	svc := h5.H5ApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, h5.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID

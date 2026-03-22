@@ -209,7 +209,7 @@ func (r *CreatePaymentRequest) GetExpiresIn() time.Duration {
 	return cmp.Or(r.ExpiresIn, DefaultExpiresIn)
 }
 
-func (r *CreatePaymentRequest) ExipredAt() time.Time {
+func (r *CreatePaymentRequest) GetExipredAt() time.Time {
 	return timex.Now().Add(r.GetExpiresIn())
 }
 

@@ -57,7 +57,7 @@ func (d *QrcodeDriver) CreatePayment(ctx context.Context, req driver.CreatePayme
 			Subject:     req.PaymentDesc,
 			TotalAmount: totalAmount,
 			ProductCode: "QR_CODE_OFFLINE",
-			TimeExpire:  req.ExipredAt().Format(time.DateTime),
+			TimeExpire:  req.GetExipredAt().Format(time.DateTime),
 			// SellerId:        "",
 			// Body:            "",
 			// MerchantOrderNo: "",

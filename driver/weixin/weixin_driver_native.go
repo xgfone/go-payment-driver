@@ -41,7 +41,7 @@ func (d *NativeDriver) CreatePayment(ctx context.Context, req driver.CreatePayme
 		return
 	}
 
-	expiretime := req.ExipredAt()
+	expiretime := req.GetExipredAt()
 	svc := native.NativeApiService{Client: d.client}
 	resp, result, err := svc.Prepay(ctx, native.PrepayRequest{
 		Appid: core.String(d.config.Appid), // 公众号ID
