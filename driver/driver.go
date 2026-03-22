@@ -295,7 +295,9 @@ type (
 		RefundReason string `json:",omitzero"`
 
 		// Unique payment id corresponding to the payment provider side.
-		ChannelPaymentId string `json:",omitzero"`
+		//
+		// Deprecated. No longer recommended for use.
+		// ChannelPaymentId string `json:",omitzero"`
 
 		// Unique refund ID corresponding to the payment provider side.
 		ChannelRefundId string `json:",omitzero"`

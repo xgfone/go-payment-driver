@@ -322,10 +322,9 @@ func (d *_Driver) parseRefundRequest(r *refunddomestic.Refund) (info driver.Refu
 		PaymentId: runtimex.Indirect(r.OutTradeNo),
 		RefundId:  runtimex.Indirect(r.OutRefundNo),
 
-		ChannelPaymentId: runtimex.Indirect(r.TransactionId),
-		ChannelRefundId:  runtimex.Indirect(r.RefundId),
-		ChannelStatus:    string(runtimex.Indirect(r.Status)),
-		ChannelData:      channelDataStr,
+		ChannelRefundId: runtimex.Indirect(r.RefundId),
+		ChannelStatus:   string(runtimex.Indirect(r.Status)),
+		ChannelData:     channelDataStr,
 
 		RefundedAt: runtimex.Indirect(r.SuccessTime),
 	}

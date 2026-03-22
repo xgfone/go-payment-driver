@@ -433,7 +433,6 @@ func (d *QrcodeDriver) parseRefundInfo(rsp *alipay.TradeRefundRsp, req *driver.C
 	info.RefundReason = "" // Keep empty
 
 	// info.ChannelRefundId = ""
-	info.ChannelPaymentId = rsp.TradeNo
 	info.ChannelStatus = "" // Keep empty
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 1024)
 
@@ -502,7 +501,6 @@ func (d *QrcodeDriver) parseRefundQuery(rsp *alipay.TradeFastPayRefundQueryRsp) 
 	info.RefundReason = "" // Keep empty
 
 	// info.ChannelRefundId = ""
-	info.ChannelPaymentId = rsp.TradeNo
 	info.ChannelStatus = rsp.RefundStatus
 	info.ChannelData, _ = jsonx.MarshalStringWithCap(data, 1024)
 
