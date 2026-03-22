@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/xgfone/go-toolkit/codeint"
+	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/timex"
 )
 
@@ -398,6 +399,23 @@ func (md *Metadata) CurrencyIsSupported(currencyCode string) bool {
 // ChannelIsSupported reports whether the channel is supported by the payment channel driver.
 func (md *Metadata) ChannelIsSupported(channel string) bool {
 	return slices.Contains(md.Channels, channel)
+}
+
+func EncodeChannelData[T any](channelData T) (channelDataStr string) {
+	channelDataStr, _ = jsonx.MarshalString(channelData)
+	if channelDataStr == "{}" {
+		channelDataStr = ""
+	}
+	return
+}
+
+func DecodeChannelData[T any](channelDataStr string) (channelData T) {
+	if channelDataStr == "" || channelDataStr == "{}" {
+		return
+	}
+
+	_ = jsonx.UnmarshalString(channelDataStr, &channelData)
+	return
 }
 
 type Driver interface {
