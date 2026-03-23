@@ -38,7 +38,7 @@ type H5Driver struct{ _Driver }
 
 func (d *H5Driver) CreatePayment(ctx context.Context, req driver.CreatePaymentRequest) (info driver.PayLinkInfo, err error) {
 	// If passing OpenId, we think that it is from WeChat MiniProgram or Browser.
-	if req.OpenId != "" {
+	if req.Buyer.OpenId != "" {
 		return (*JsapiDriver)(d).CreatePayment(ctx, req)
 	}
 
@@ -46,7 +46,7 @@ func (d *H5Driver) CreatePayment(ctx context.Context, req driver.CreatePaymentRe
 		return
 	}
 
-	if req.ClientIp == "" {
+	if req.Buyer.ClientIp == "" {
 		err = driver.ErrBadRequest.WithReason("missing ClientIp")
 		return
 	}
@@ -74,7 +74,7 @@ func (d *H5Driver) CreatePayment(ctx context.Context, req driver.CreatePaymentRe
 
 		SettleInfo: &h5.SettleInfo{ProfitSharing: &req.Share},
 		SceneInfo: &h5.SceneInfo{
-			PayerClientIp: &req.ClientIp,
+			PayerClientIp: &req.Buyer.ClientIp,
 			H5Info: &h5.H5Info{
 				Type: &d.config.H5Type,
 			},

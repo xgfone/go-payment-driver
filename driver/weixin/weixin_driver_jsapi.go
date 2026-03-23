@@ -42,7 +42,7 @@ func (d *JsapiDriver) CreatePayment(ctx context.Context, req driver.CreatePaymen
 		return
 	}
 
-	if req.OpenId == "" {
+	if req.Buyer.OpenId == "" {
 		err = driver.ErrBadRequest.WithReason("missing OpenId")
 		return
 	}
@@ -64,7 +64,7 @@ func (d *JsapiDriver) CreatePayment(ctx context.Context, req driver.CreatePaymen
 			Currency: &req.PaymentCurrency, // CNY：人民币，境内商户号仅支持人民币。
 		},
 
-		Payer:      &jsapi.Payer{Openid: &req.OpenId},
+		Payer:      &jsapi.Payer{Openid: &req.Buyer.OpenId},
 		SettleInfo: &jsapi.SettleInfo{ProfitSharing: &req.Share},
 	})
 	if result != nil && result.Response != nil {

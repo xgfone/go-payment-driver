@@ -59,6 +59,17 @@ type (
 
 // Payment
 type (
+	Buyer struct {
+		// Buyer's Open ID, such as OpenId under WeChat Mini Program or Service Account,
+		// specific usage depends on the support of the payment provider.
+		OpenId string `json:",omitzero"`
+
+		// Buyer's IP address when creating the payment.
+		//
+		// Note: Jialian Payment or WeChat H5 payment requires this parameter.
+		ClientIp string `json:",omitzero"`
+	}
+
 	CreatePaymentRequest struct {
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
@@ -89,18 +100,15 @@ type (
 		// or automatic closing, the driver implementation should ignore it.
 		ExpiresIn time.Duration `json:",omitzero"`
 
-		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
-		// specific usage depends on the support of the payment provider.
-		OpenId string `json:",omitzero"`
-
-		// Buyer's IP address when creating the payment.
-		//
-		// Note: Jialian Payment or WeChat H5 payment requires this parameter.
-		ClientIp string `json:",omitzero"`
-
 		// Extended information for specific information required
 		// by specific payment providers.
 		ExtInfo any `json:",omitzero"`
+
+		// Buyer information.
+		//
+		// Note: some payment providers require this parameter information.
+		// If not needed, the driver implementation should ignore it.
+		Buyer Buyer `json:",omitzero"`
 
 		// Whether to enable profit sharing when creating a payment.
 		//
