@@ -118,12 +118,6 @@ type (
 	}
 
 	CancelPaymentRequest struct {
-		// Buyer information.
-		//
-		// Note: some payment providers require this parameter information.
-		// If not needed, the driver implementation should ignore it.
-		Buyer Buyer `json:",omitzero"`
-
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
 
@@ -139,12 +133,6 @@ type (
 	}
 
 	QueryPaymentRequest struct {
-		// Buyer information.
-		//
-		// Note: some payment providers require this parameter information.
-		// If not needed, the driver implementation should ignore it.
-		Buyer Buyer `json:",omitzero"`
-
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
 
@@ -229,12 +217,6 @@ func (r *CreatePaymentRequest) GetExipredAt() time.Time {
 // Refund
 type (
 	CreateRefundRequest struct {
-		// Buyer information.
-		//
-		// Note: some payment providers require this parameter information.
-		// If not needed, the driver implementation should ignore it.
-		Buyer Buyer `json:",omitzero"`
-
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
 
@@ -275,12 +257,6 @@ type (
 	}
 
 	QueryRefundRequest struct {
-		// Buyer information.
-		//
-		// Note: some payment providers require this parameter information.
-		// If not needed, the driver implementation should ignore it.
-		Buyer Buyer `json:",omitzero"`
-
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
 
@@ -341,8 +317,6 @@ type (
 
 func (r CreateRefundRequest) QueryRefundRequest() QueryRefundRequest {
 	return QueryRefundRequest{
-		Buyer: r.Buyer,
-
 		RefundId:  r.RefundId,
 		PaymentId: r.PaymentId,
 
