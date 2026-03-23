@@ -298,11 +298,6 @@ type (
 		// the driver implementation can ignore it.
 		RefundReason string `json:",omitzero"`
 
-		// Unique payment id corresponding to the payment provider side.
-		//
-		// Deprecated. No longer recommended for use.
-		ChannelPaymentId string `json:",omitzero"`
-
 		// Unique refund ID corresponding to the payment provider side.
 		ChannelRefundId string `json:",omitzero"`
 
