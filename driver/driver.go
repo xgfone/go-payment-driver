@@ -118,9 +118,11 @@ type (
 	}
 
 	CancelPaymentRequest struct {
-		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
-		// specific usage depends on the support of the payment provider.
-		OpenId string `json:",omitzero"`
+		// Buyer information.
+		//
+		// Note: some payment providers require this parameter information.
+		// If not needed, the driver implementation should ignore it.
+		Buyer Buyer `json:",omitzero"`
 
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
@@ -137,9 +139,11 @@ type (
 	}
 
 	QueryPaymentRequest struct {
-		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
-		// specific usage depends on the support of the payment provider.
-		OpenId string `json:",omitzero"`
+		// Buyer information.
+		//
+		// Note: some payment providers require this parameter information.
+		// If not needed, the driver implementation should ignore it.
+		Buyer Buyer `json:",omitzero"`
 
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
@@ -225,9 +229,11 @@ func (r *CreatePaymentRequest) GetExipredAt() time.Time {
 // Refund
 type (
 	CreateRefundRequest struct {
-		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
-		// specific usage depends on the support of the payment provider.
-		OpenId string `json:",omitzero"`
+		// Buyer information.
+		//
+		// Note: some payment providers require this parameter information.
+		// If not needed, the driver implementation should ignore it.
+		Buyer Buyer `json:",omitzero"`
 
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
@@ -269,9 +275,11 @@ type (
 	}
 
 	QueryRefundRequest struct {
-		// Open ID, such as OpenId under WeChat Mini Program or Service Account,
-		// specific usage depends on the support of the payment provider.
-		OpenId string `json:",omitzero"`
+		// Buyer information.
+		//
+		// Note: some payment providers require this parameter information.
+		// If not needed, the driver implementation should ignore it.
+		Buyer Buyer `json:",omitzero"`
 
 		// Our unique payment id.
 		PaymentId string `json:",omitzero"`
@@ -333,7 +341,7 @@ type (
 
 func (r CreateRefundRequest) QueryRefundRequest() QueryRefundRequest {
 	return QueryRefundRequest{
-		OpenId: r.OpenId,
+		Buyer: r.Buyer,
 
 		RefundId:  r.RefundId,
 		PaymentId: r.PaymentId,
