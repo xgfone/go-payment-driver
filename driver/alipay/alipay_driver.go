@@ -20,8 +20,8 @@ import (
 	"strings"
 
 	"github.com/smartwalle/alipay/v3"
+	"github.com/xgfone/go-currency"
 	"github.com/xgfone/go-payment-driver/builder"
-	"github.com/xgfone/go-payment-driver/currency"
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-toolkit/timex"
 )

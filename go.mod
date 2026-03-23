@@ -3,6 +3,7 @@ module github.com/xgfone/go-payment-driver
 require (
 	github.com/smartwalle/alipay/v3 v3.2.29
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
+	github.com/xgfone/go-currency v0.1.0
 	github.com/xgfone/go-toolkit v0.17.0
 )
 

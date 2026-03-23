@@ -23,6 +23,8 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/wechatpay-apiv3/wechatpay-go v0.2.21 h1:uIyMpzvcaHA33W/QPtHstccw+X52HO1gFdvVL9O6Lfs=
 github.com/wechatpay-apiv3/wechatpay-go v0.2.21/go.mod h1:A254AUBVB6R+EqQFo3yTgeh7HtyqRRtN2w9hQSOrd4Q=
+github.com/xgfone/go-currency v0.1.0 h1:DboYd1qO/Jhgv+iIZ1paVoSbc8ep6ZwQoEpvmCCpQus=
+github.com/xgfone/go-currency v0.1.0/go.mod h1:GdoQfBTxhqlr1EUC1PP1tEs5CpzA5cAoajNLNU6G3/U=
 github.com/xgfone/go-toolkit v0.17.0 h1:tSIeFYnSka79/BYKdURbeud2lRogJC9PzF8gqF/OL3k=
 github.com/xgfone/go-toolkit v0.17.0/go.mod h1:eOWnIK/acAJOoqEOtWnvuY0Pbn6cZ0DP/Oeoyn17QHw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
