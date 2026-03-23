@@ -60,6 +60,14 @@ func ToError(err error) error {
 	return _e
 }
 
+func fixAmount(amount string) string {
+	switch amount {
+	case "", "0", "0.0", "0.00":
+		return ""
+	}
+	return amount
+}
+
 type (
 	SubFeeDetail struct {
 		ChargeFee         string `json:",omitzero"`

@@ -273,20 +273,20 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.P
 	}
 
 	data := ChannelData{
-		PayAmount:   rsp.PayAmount,
+		PayAmount:   fixAmount(rsp.PayAmount),
 		PayCurrency: rsp.PayCurrency,
 
-		PointAmount:     rsp.PointAmount,
-		ReceiptAmount:   rsp.ReceiptAmount,
-		InvoiceAmount:   rsp.InvoiceAmount,
-		DiscountAmount:  rsp.DiscountAmount,
-		MdiscountAmount: rsp.MdiscountAmount,
+		PointAmount:     fixAmount(rsp.PointAmount),
+		ReceiptAmount:   fixAmount(rsp.ReceiptAmount),
+		InvoiceAmount:   fixAmount(rsp.InvoiceAmount),
+		DiscountAmount:  fixAmount(rsp.DiscountAmount),
+		MdiscountAmount: fixAmount(rsp.MdiscountAmount),
 		BuyerUserType:   rsp.BuyerUserType,
 		BuyerLogonId:    rsp.BuyerLogonId,
 		BuyerUserId:     rsp.BuyerUserId,
 		BuyerOpenId:     rsp.BuyerOpenId,
 
-		SettleAmount:    rsp.SettleAmount,
+		SettleAmount:    fixAmount(rsp.SettleAmount),
 		SettleCurrency:  rsp.SettleCurrency,
 		SettleTransRate: rsp.SettleTransRate,
 
@@ -334,9 +334,9 @@ func (d *QrcodeDriver) parseOrderQuery(rsp *alipay.TradeQueryRsp) (info driver.P
 
 func (d *QrcodeDriver) parseNotification(rsp *alipay.Notification) (info driver.PaymentInfo) {
 	data := ChannelData{
-		PointAmount:   rsp.PointAmount,
-		ReceiptAmount: rsp.ReceiptAmount,
-		InvoiceAmount: rsp.InvoiceAmount,
+		PointAmount:   fixAmount(rsp.PointAmount),
+		ReceiptAmount: fixAmount(rsp.ReceiptAmount),
+		InvoiceAmount: fixAmount(rsp.InvoiceAmount),
 		BuyerLogonId:  rsp.BuyerLogonId,
 		BuyerOpenId:   rsp.BuyerOpenId,
 		BuyerUserId:   rsp.BuyerId,
@@ -384,8 +384,8 @@ func (d *QrcodeDriver) parseRefundInfo(rsp *alipay.TradeRefundRsp, req *driver.C
 		items = make([]RefundDetailItem, len(rsp.RefundDetailItemList))
 		for i, item := range rsp.RefundDetailItemList {
 			items[i] = RefundDetailItem{
-				Amount:      item.Amount,
-				RealAmount:  item.RealAmount,
+				Amount:      fixAmount(item.Amount),
+				RealAmount:  fixAmount(item.RealAmount),
 				FundChannel: item.FundChannel,
 				FundType:    item.FundType,
 			}
@@ -453,8 +453,8 @@ func (d *QrcodeDriver) parseRefundQuery(rsp *alipay.TradeFastPayRefundQueryRsp) 
 		items = make([]RefundDetailItem, len(rsp.RefundDetailItemList))
 		for i, item := range rsp.RefundDetailItemList {
 			items[i] = RefundDetailItem{
-				Amount:      item.Amount,
-				RealAmount:  item.RealAmount,
+				Amount:      fixAmount(item.Amount),
+				RealAmount:  fixAmount(item.RealAmount),
 				FundChannel: item.FundChannel,
 				FundType:    item.FundType,
 			}
