@@ -16,6 +16,7 @@ package builder
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/xgfone/go-payment-driver/driver"
 )
@@ -46,13 +47,20 @@ func ParseConfig(_type, conf string) (any, error) {
 	}
 
 	config, err := builder.ParseConfig(conf)
-	if err != nil {
+	if err != nil || config == nil {
 		return nil, err
 	}
 
 	type Desensitizer interface{ Desensitize() }
 	if d, ok := config.(Desensitizer); ok {
 		d.Desensitize()
+	} else if rv := reflect.ValueOf(config); rv.IsValid() {
+		ptr := reflect.New(reflect.TypeOf(config))
+		if d, ok := ptr.Interface().(Desensitizer); ok {
+			ptr.Elem().Set(rv)
+			d.Desensitize()
+			config = ptr.Elem().Interface()
+		}
 	}
 
 	return config, nil
