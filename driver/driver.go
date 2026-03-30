@@ -325,6 +325,33 @@ func (r CreateRefundRequest) QueryRefundRequest() QueryRefundRequest {
 	}
 }
 
+const (
+	CallbackTypeRefund  CallbackType = "Refund"
+	CallbackTypePayment CallbackType = "Payment"
+)
+
+type (
+	CallbackType string
+
+	CallbackRequest struct {
+		// It will be empty if the payment channel provider, such as PayPal,
+		// uses the webhook callback based on the event. Or, it will be set
+		// to the specific callback type, such as weixin or wechat.
+		Type CallbackType
+
+		Request *http.Request
+	}
+
+	CallbackResponse struct {
+		// The type of the callback.
+		Type CallbackType
+
+		// The parsed Refund or Payment information by the callback type.
+		RefundInfo  *RefundInfo
+		PaymentInfo *PaymentInfo
+	}
+)
+
 func NewMetadata(provider, payscene string) Metadata {
 	return Metadata{Provider: provider, PayScene: payscene}
 }
@@ -419,9 +446,6 @@ type Driver interface {
 	RefundPayment(ctx context.Context, req CreateRefundRequest) (info RefundInfo, err error)
 	QueryRefund(ctx context.Context, req QueryRefundRequest) (info RefundInfo, ok bool, err error)
 
-	ParsePaymentCallbackRequest(ctx context.Context, req *http.Request) (info PaymentInfo, err error)
-	ParseRefundCallbackRequest(ctx context.Context, req *http.Request) (info RefundInfo, err error)
-
-	SendPaymentCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
-	SendRefundCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
+	ParseCallbackRequest(ctx context.Context, req CallbackRequest) (resp CallbackResponse, err error)
+	SendCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
 }

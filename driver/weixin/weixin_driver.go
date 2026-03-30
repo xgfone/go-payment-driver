@@ -128,40 +128,37 @@ func (d *_Driver) Metadata() driver.Metadata {
 	return d.metadata
 }
 
-func (d *_Driver) ParsePaymentCallbackRequest(ctx context.Context, r *http.Request) (info driver.PaymentInfo, err error) {
-	var trans payments.Transaction
-	_, err = d.handler.ParseNotifyRequest(ctx, r, &trans)
-	if err == nil {
-		info = d.parsePayRequest(&trans)
-	}
-	return
-}
-
-func (d *_Driver) ParseRefundCallbackRequest(ctx context.Context, r *http.Request) (info driver.RefundInfo, err error) {
-	var resp refunddomestic.Refund
-	_req, err := d.handler.ParseNotifyRequest(ctx, r, &resp)
-	if err == nil {
-		info.RefundReason = _req.Summary
-		info = d.parseRefundRequest(&resp)
-	}
-	return
-}
-
-func (d *_Driver) SendPaymentCallbackResponse(_ context.Context, w http.ResponseWriter, err error) {
-	d.sendCallbackResponse(w, err)
-}
-
-func (d *_Driver) SendRefundCallbackResponse(_ context.Context, w http.ResponseWriter, err error) {
-	d.sendCallbackResponse(w, err)
-}
-
-func (d *_Driver) sendCallbackResponse(w http.ResponseWriter, err error) {
+func (d *_Driver) SendCallbackResponse(_ context.Context, rw http.ResponseWriter, err error) {
 	if err != nil {
 		data := map[string]string{"code": "FAIL", "message": err.Error()}
-		w.(interface{ JSON(int, any) }).JSON(500, data)
+		rw.(interface{ JSON(int, any) }).JSON(500, data)
 	} else {
-		w.WriteHeader(200)
+		rw.WriteHeader(200)
 	}
+}
+
+func (d *_Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (resp driver.CallbackResponse, err error) {
+	resp.Type = req.Type
+	switch req.Type {
+	case driver.CallbackTypeRefund:
+		var _resp refunddomestic.Refund
+		_req, err := d.handler.ParseNotifyRequest(ctx, req.Request, &_resp)
+		if err == nil {
+			info := d.parseRefundRequest(&_resp)
+			info.RefundReason = _req.Summary
+			resp.RefundInfo = &info
+		}
+
+	case driver.CallbackTypePayment:
+		var trans payments.Transaction
+		_, err = d.handler.ParseNotifyRequest(ctx, req.Request, &trans)
+		if err == nil {
+			info := d.parsePayRequest(&trans)
+			resp.PaymentInfo = &info
+		}
+
+	}
+	return
 }
 
 // If the payment has been fully refunded, return ErrPaymentRefundedFully.

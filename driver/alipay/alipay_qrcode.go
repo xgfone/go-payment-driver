@@ -16,7 +16,6 @@ package alipay
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -203,39 +202,31 @@ func (d *QrcodeDriver) QueryRefund(ctx context.Context, query driver.QueryRefund
 	return
 }
 
-func (d *QrcodeDriver) ParsePaymentCallbackRequest(ctx context.Context, r *http.Request) (info driver.PaymentInfo, err error) {
-	if err = r.ParseForm(); err != nil {
-		return
-	}
-
-	n, err := d.client.DecodeNotification(ctx, r.Form)
-	if err != nil {
-		return
-	}
-
-	info = d.parseNotification(n)
-	return
-}
-
-func (d *QrcodeDriver) SendPaymentCallbackResponse(ctx context.Context, w http.ResponseWriter, err error) {
-	d.sendResponse(ctx, w, err)
-}
-
-func (d *QrcodeDriver) ParseRefundCallbackRequest(ctx context.Context, r *http.Request) (info driver.RefundInfo, err error) {
-	err = errors.New("unimplemented")
-	return
-}
-
-func (d *QrcodeDriver) SendRefundCallbackResponse(ctx context.Context, w http.ResponseWriter, err error) {
-	d.sendResponse(ctx, w, err)
-}
-
-func (d *QrcodeDriver) sendResponse(_ context.Context, w http.ResponseWriter, err error) {
+func (d *QrcodeDriver) SendCallbackResponse(_ context.Context, rw http.ResponseWriter, err error) {
 	if err == nil {
-		alipay.AckNotification(w)
+		alipay.AckNotification(rw)
 	} else {
-		w.WriteHeader(500)
+		rw.WriteHeader(500)
 	}
+}
+
+func (d *QrcodeDriver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (resp driver.CallbackResponse, err error) {
+	resp.Type = req.Type
+	if req.Type == driver.CallbackTypePayment {
+		if err = req.Request.ParseForm(); err != nil {
+			return
+		}
+
+		var notification *alipay.Notification
+		notification, err = d.client.DecodeNotification(ctx, req.Request.Form)
+		if err != nil {
+			return
+		}
+
+		info := d.parseNotification(notification)
+		resp.PaymentInfo = &info
+	}
+	return
 }
 
 /// ----------------------------------------------------------------------- ///
