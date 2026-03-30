@@ -20,6 +20,11 @@ import "github.com/xgfone/go-payment-driver/driver"
 // Builder is used to build the payment channel driver.
 type Builder interface {
 	// Metadata returns the metadata of the payment channel driver.
+	//
+	// Note: If Metadata.Currencies contains values, it means that
+	// the driver built by this builder will only support these currencies.
+	// Otherwise, a concrete driver must be built to determine
+	// which currencies are supported.
 	Metadata() driver.Metadata
 
 	// ParseConfig parses the configuration string into the config object.
