@@ -33,7 +33,6 @@ type DriverNewer[Config any] func(Builder, Config) (driver.Driver, error)
 //	Type:     Optional, defaults to "${Provider}_${PayScene}"
 //	LinkType: Optional, defaults to Type
 //	Channels: Optional, defaults to [Provider]
-//	Currencies: Optional, defaults to ["CNY"]
 func New[Config any](newDriver DriverNewer[Config], metadata driver.Metadata) Builder {
 	if metadata.Provider == "" {
 		panic("Metadata.Provider must not be empty")
@@ -52,10 +51,6 @@ func New[Config any](newDriver DriverNewer[Config], metadata driver.Metadata) Bu
 
 	if len(metadata.Channels) == 0 {
 		metadata.Channels = []string{metadata.Provider}
-	}
-
-	if len(metadata.Currencies) == 0 {
-		metadata.Currencies = []string{"CNY"}
 	}
 
 	return &_Builder[Config]{
