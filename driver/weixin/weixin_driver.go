@@ -52,7 +52,7 @@ import (
 var defaultCurrency = "CNY"
 
 func registerBuilder(scene string, linktype driver.LinkType, newf builder.DriverNewer[Config]) {
-	metadata := driver.NewMetadata(Type, scene).WithLinkType(linktype)
+	metadata := driver.NewMetadata(Type, scene).WithLinkType(linktype).WithCurrencies("CNY")
 	builder.Register(builder.New(newf, metadata))
 }
 
