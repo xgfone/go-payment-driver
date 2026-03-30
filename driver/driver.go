@@ -339,7 +339,7 @@ func (md Metadata) WithChannels(channels []string) Metadata {
 	return md
 }
 
-func (md Metadata) WithCurrencies(currencies []string) Metadata {
+func (md Metadata) WithCurrencies(currencies ...string) Metadata {
 	md.Currencies = currencies
 	return md
 }
