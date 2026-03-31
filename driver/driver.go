@@ -431,21 +431,37 @@ func DecodeChannelData[T any](channelDataStr string) (channelData T) {
 }
 
 type Driver interface {
+	// Metadata returns the metadata of the payment channel driver.
 	Metadata() Metadata
 
+	// CreatePayment creates a payment and returns the pay link information, such as qrcode url.
 	CreatePayment(ctx context.Context, req CreatePaymentRequest) (info PayLinkInfo, err error)
+
+	// QueryPayment queries the payment status information.
 	QueryPayment(ctx context.Context, req QueryPaymentRequest) (info PaymentInfo, ok bool, err error)
 
-	// If has paid, return ErrPaid
-	// If the payment has been canceled, return nil.
+	// CancelPayment cancels the unpaid payment.
+	//
+	// If has paid, return driver.ErrPaid.
+	// If the payment has been canceled or closed, return nil.
 	CancelPayment(ctx context.Context, req CancelPaymentRequest) (err error)
 
-	// If the payment has been fully refunded, return ErrPaymentRefundedFully.
-	// If the balance is insufficient, return ErrBalanceInsufficient.
-	// If it's not allowed to refund the payment, return ErrUnallowed.
+	// RefundPayment refunds the paid payment.
+	//
+	// If the payment has been fully refunded, return driver.ErrPaymentRefundedFully.
+	// If the balance is insufficient, return driver.ErrBalanceInsufficient.
+	// If it's not allowed to refund the payment, return driver.ErrUnallowed.
 	RefundPayment(ctx context.Context, req CreateRefundRequest) (info RefundInfo, err error)
+
+	// QueryRefund queries the refund status information.
 	QueryRefund(ctx context.Context, req QueryRefundRequest) (info RefundInfo, ok bool, err error)
 
+	// ParseCallbackRequest parses the callback request and returns the parsed information.
 	ParseCallbackRequest(ctx context.Context, req CallbackRequest) (resp CallbackResponse, err error)
+
+	// SendCallbackResponse sends the callback response.
+	//
+	// If err is nil, the response will be sent successfully.
+	// If err is not nil, the response will be sent with the error.
 	SendCallbackResponse(ctx context.Context, rw http.ResponseWriter, err error)
 }
