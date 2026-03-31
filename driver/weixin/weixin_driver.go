@@ -137,8 +137,8 @@ func (d *_Driver) SendCallbackResponse(_ context.Context, rw http.ResponseWriter
 	}
 }
 
-func (d *_Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (resp driver.CallbackResponse, err error) {
-	resp.Type = req.Type
+func (d *_Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (cbinfo driver.CallbackInfo, err error) {
+	cbinfo.Type = req.Type
 	switch req.Type {
 	case driver.CallbackTypeRefund:
 		var _resp refunddomestic.Refund
@@ -146,7 +146,7 @@ func (d *_Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackR
 		if err == nil {
 			info := d.parseRefundRequest(&_resp)
 			info.RefundReason = _req.Summary
-			resp.RefundInfo = &info
+			cbinfo.RefundInfo = &info
 		}
 
 	case driver.CallbackTypePayment:
@@ -154,7 +154,7 @@ func (d *_Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackR
 		_, err = d.handler.ParseNotifyRequest(ctx, req.Request, &trans)
 		if err == nil {
 			info := d.parsePayRequest(&trans)
-			resp.PaymentInfo = &info
+			cbinfo.PaymentInfo = &info
 		}
 
 	}

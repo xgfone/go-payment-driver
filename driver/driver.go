@@ -342,7 +342,7 @@ type (
 		Request *http.Request
 	}
 
-	CallbackResponse struct {
+	CallbackInfo struct {
 		// The type of the callback.
 		Type CallbackType
 
@@ -356,8 +356,8 @@ func (ct CallbackType) CallbackRequest(req *http.Request) CallbackRequest {
 	return CallbackRequest{Type: ct, Request: req}
 }
 
-func (r CallbackRequest) CallbackResponse() CallbackResponse {
-	return CallbackResponse{Type: r.Type}
+func (r CallbackRequest) CallbackInfo() CallbackInfo {
+	return CallbackInfo{Type: r.Type}
 }
 
 func NewMetadata(provider, payscene string) Metadata {
@@ -465,7 +465,7 @@ type Driver interface {
 	QueryRefund(ctx context.Context, req QueryRefundRequest) (info RefundInfo, ok bool, err error)
 
 	// ParseCallbackRequest parses the callback request and returns the parsed information.
-	ParseCallbackRequest(ctx context.Context, req CallbackRequest) (resp CallbackResponse, err error)
+	ParseCallbackRequest(ctx context.Context, req CallbackRequest) (info CallbackInfo, err error)
 
 	// SendCallbackResponse sends the callback response.
 	//

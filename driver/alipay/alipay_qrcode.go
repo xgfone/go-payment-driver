@@ -210,8 +210,8 @@ func (d *QrcodeDriver) SendCallbackResponse(_ context.Context, rw http.ResponseW
 	}
 }
 
-func (d *QrcodeDriver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (resp driver.CallbackResponse, err error) {
-	resp.Type = req.Type
+func (d *QrcodeDriver) ParseCallbackRequest(ctx context.Context, req driver.CallbackRequest) (cbinfo driver.CallbackInfo, err error) {
+	cbinfo.Type = req.Type
 	if req.Type == driver.CallbackTypePayment {
 		if err = req.Request.ParseForm(); err != nil {
 			return
@@ -224,7 +224,7 @@ func (d *QrcodeDriver) ParseCallbackRequest(ctx context.Context, req driver.Call
 		}
 
 		info := d.parseNotification(notification)
-		resp.PaymentInfo = &info
+		cbinfo.PaymentInfo = &info
 	}
 	return
 }
