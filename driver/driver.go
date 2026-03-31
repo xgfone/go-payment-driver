@@ -352,6 +352,14 @@ type (
 	}
 )
 
+func (ct CallbackType) CallbackRequest(req *http.Request) CallbackRequest {
+	return CallbackRequest{Type: ct, Request: req}
+}
+
+func (r CallbackRequest) CallbackResponse() CallbackResponse {
+	return CallbackResponse{Type: r.Type}
+}
+
 func NewMetadata(provider, payscene string) Metadata {
 	return Metadata{Provider: provider, PayScene: payscene}
 }
