@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-payment-driver/driver/paypal/internal/paypal"
 	"github.com/xgfone/go-toolkit/jsonx"
+	"github.com/xgfone/go-toolkit/random"
 )
 
 func init() {
@@ -272,8 +274,10 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		return
 	}
 
+	slog.Info("+++ webhook", "event", event, "data", string(raw))
+
 	switch event.EventType {
-	/// Payment
+	/// Payer has paid and we need to capture the payment.
 	case "CHECKOUT.ORDER.APPROVED":
 		var res struct {
 			Id string `json:"id"`
@@ -308,7 +312,6 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 
 	case
 		"PAYMENT.CAPTURE.DENIED",
-		"PAYMENT.CAPTURE.PENDING",
 		"PAYMENT.CAPTURE.REVERSED",
 		"PAYMENT.CAPTURE.COMPLETED":
 
@@ -321,13 +324,12 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		cbinfo.Type = driver.CallbackTypePayment
 
 	/// Refund
-	case "PAYMENT.REFUND.PENDING", "PAYMENT.REFUND.FAILED":
+	case "PAYMENT.REFUND.FAILED":
 		var rf paypal.RefundResource
 		if err = json.Unmarshal(raw, &rf); err != nil {
 			return
 		}
 
-		// TODO
 		info := d.refundToRefundInfo(rf, "")
 		cbinfo.RefundInfo = &info
 		cbinfo.Type = driver.CallbackTypeRefund
@@ -480,9 +482,12 @@ func (d Driver) refundToRefundInfo(resp paypal.RefundResource, cd string) driver
 }
 
 func (d Driver) captureOrder(ctx context.Context, orderID string) (paypal.OrderResponse, error) {
+	rand := random.String(4, random.NumCharset)
+	reqid := strings.Join([]string{orderID, rand, "capture"}, "-")
+
 	path := fmt.Sprintf("/v2/checkout/orders/%s/capture", orderID)
 	header := map[string]string{
-		"PayPal-Request-Id": orderID + "-capture",
+		"PayPal-Request-Id": reqid,
 		"Prefer":            "return=representation",
 	}
 
