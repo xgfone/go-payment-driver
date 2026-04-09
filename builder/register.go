@@ -32,6 +32,13 @@ func Register(builder Builder) {
 	_builders[_type] = builder
 }
 
+// Unregister unregisters the registered builder with the given type.
+//
+// If the builder is not registered, it does nothing.
+func Unregister(_type string) {
+	delete(_builders, _type)
+}
+
 // Get returns the builder registered with the given type.
 func Get(_type string) Builder {
 	return _builders[_type]
