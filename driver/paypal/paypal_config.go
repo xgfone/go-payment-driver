@@ -17,9 +17,9 @@ type Config struct {
 	CancelUrl string
 
 	// Optional experience fields.
-	BrandName  string
-	Locale     string
-	UserAction string // default: PAY_NOW
+	Locale     string `json:",omitempty"`
+	BrandName  string `json:",omitempty"`
+	UserAction string `json:",omitempty"` // default: PAY_NOW
 
 	Currencies []string
 

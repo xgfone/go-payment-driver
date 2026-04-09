@@ -209,19 +209,14 @@ func (d *Driver) parseAndVerifyWebhook(ctx context.Context, req *http.Request) (
 }
 
 func (d *Driver) verifyWebhookSignature(ctx context.Context, h http.Header, body []byte) error {
-	var eventObj map[string]any
-	if err := json.Unmarshal(body, &eventObj); err != nil {
-		return err
-	}
-
 	payload := map[string]any{
-		"auth_algo":         h.Get("PAYPAL-AUTH-ALGO"),
-		"cert_url":          h.Get("PAYPAL-CERT-URL"),
-		"transmission_id":   h.Get("PAYPAL-TRANSMISSION-ID"),
-		"transmission_sig":  h.Get("PAYPAL-TRANSMISSION-SIG"),
-		"transmission_time": h.Get("PAYPAL-TRANSMISSION-TIME"),
+		"auth_algo":         h.Get("Paypal-Auth-Algo"),
+		"cert_url":          h.Get("Paypal-Cert-Url"),
+		"transmission_id":   h.Get("Paypal-Transmission-Id"),
+		"transmission_sig":  h.Get("Paypal-Transmission-Sig"),
+		"transmission_time": h.Get("Paypal-Transmission-Time"),
 		"webhook_id":        d.config.WebhookId,
-		"webhook_event":     eventObj,
+		"webhook_event":     json.RawMessage(body),
 	}
 
 	var resp struct {
@@ -233,7 +228,7 @@ func (d *Driver) verifyWebhookSignature(ctx context.Context, h http.Header, body
 	}
 
 	if !strings.EqualFold(resp.VerificationStatus, "SUCCESS") {
-		return driver.ErrBadRequest.WithReason("invalid paypal webhook signature")
+		return driver.ErrBadRequest.WithReasonf("invalid paypal webhook signature: %s", resp.VerificationStatus)
 	}
 
 	return nil

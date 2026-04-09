@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>支付未完成</title>
+    <style>
+      :root {
+        --bg1: #111827;
+        --bg2: #0f172a;
+        --card: rgba(255, 255, 255, 0.1);
+        --card-border: rgba(255, 255, 255, 0.14);
+        --text: #f8fafc;
+        --subtext: rgba(248, 250, 252, 0.78);
+        --warn: #f59e0b;
+        --warn-soft: rgba(245, 158, 11, 0.14);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(245, 158, 11, 0.18), transparent 34%),
+          linear-gradient(180deg, var(--bg1), var(--bg2));
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          "Noto Sans SC", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+      }
+
+      .wrap {
+        width: 100%;
+        max-width: 460px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        padding: 28px 22px 24px;
+        text-align: center;
+      }
+
+      .icon-wrap {
+        width: 88px;
+        height: 88px;
+        margin: 0 auto 18px;
+        border-radius: 999px;
+        background: var(--warn-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
+      }
+
+      .icon {
+        width: 42px;
+        height: 42px;
+        display: block;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .desc {
+        margin: 12px auto 0;
+        max-width: 320px;
+        color: var(--subtext);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 16px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.14);
+        color: #fde68a;
+        font-size: 12px;
+        line-height: 1;
+        border: 1px solid rgba(245, 158, 11, 0.18);
+      }
+
+      .panel {
+        margin-top: 22px;
+        text-align: left;
+        border-radius: 18px;
+        padding: 16px 16px 14px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 8px 0;
+      }
+
+      .row + .row {
+        border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      }
+
+      .label {
+        flex: 0 0 auto;
+        min-width: 72px;
+        color: rgba(248, 250, 252, 0.6);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .value {
+        flex: 1 1 auto;
+        text-align: right;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.6;
+        word-break: break-all;
+      }
+
+      .tips {
+        margin-top: 18px;
+        padding: 14px 14px 12px;
+        border-radius: 16px;
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.14);
+        text-align: left;
+        color: rgba(248, 250, 252, 0.88);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .tips strong {
+        color: #ffffff;
+      }
+
+      .footer {
+        margin-top: 18px;
+        color: rgba(248, 250, 252, 0.45);
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      @media (max-width: 380px) {
+        .card {
+          border-radius: 20px;
+          padding: 24px 18px 20px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .desc {
+          font-size: 14px;
+        }
+
+        .value {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="icon-wrap" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" fill="rgba(245,158,11,0.18)"></circle>
+            <path d="M24 15V26" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" />
+            <circle cx="24" cy="33" r="2.6" fill="#f59e0b" />
+          </svg>
+        </div>
+
+        <h1>支付未完成</h1>
+        <p class="desc">您已取消支付，或本次支付未成功完成。请返回大屏后重新扫码，或重新选择商品后再次支付。</p>
+
+        <div class="badge" id="statusText">状态：已取消或未完成</div>
+
+        <div class="panel">
+          <div class="row">
+            <div class="label">订单号</div>
+            <div class="value" id="tradeNo">--</div>
+          </div>
+          <div class="row">
+            <div class="label">会话号</div>
+            <div class="value" id="sessionId">--</div>
+          </div>
+          <div class="row">
+            <div class="label">时间</div>
+            <div class="value" id="currentTime">--</div>
+          </div>
+        </div>
+
+        <div class="tips">
+          <strong>温馨提示：</strong><br />
+          若您仍需购买，请返回大屏重新发起支付。若已完成扣款但页面未更新，请稍候几秒并留意大屏状态变化。
+        </div>
+
+        <div class="footer">本页面仅用于结果提示，订单最终状态以系统确认为准。</div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+
+        function pick() {
+          var keys = Array.prototype.slice.call(arguments);
+          for (var i = 0; i < keys.length; i++) {
+            var v = params.get(keys[i]);
+            if (v) return v;
+          }
+          return "";
+        }
+
+        function setText(id, value, fallback) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.textContent = value || fallback || "--";
+        }
+
+        function formatNow() {
+          var d = new Date();
+          var yyyy = d.getFullYear();
+          var mm = String(d.getMonth() + 1).padStart(2, "0");
+          var dd = String(d.getDate()).padStart(2, "0");
+          var hh = String(d.getHours()).padStart(2, "0");
+          var mi = String(d.getMinutes()).padStart(2, "0");
+          var ss = String(d.getSeconds()).padStart(2, "0");
+          return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss;
+        }
+
+        var tradeNo = pick("trade_no", "tradeNo", "out_trade_no");
+        var sessionId = pick("session_id", "sessionId", "cs");
+
+        setText("tradeNo", tradeNo);
+        setText("sessionId", sessionId);
+        setText("currentTime", formatNow());
+
+        var paymentStatus = pick("payment_status", "status");
+        if (paymentStatus) {
+          var text = "状态：" + paymentStatus;
+          setText("statusText", text, "状态：已取消或未完成");
+        }
+      })();
+    </script>
+  </body>
+</html>

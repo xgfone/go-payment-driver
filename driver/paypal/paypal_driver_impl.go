@@ -296,7 +296,7 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		cbinfo.PaymentInfo = &info
 		cbinfo.Type = driver.CallbackTypePayment
 
-	case "CHECKOUT.PAYMENT-APPROVAL.REVERSED":
+	case "CHECKOUT.PAYMENT-APPROVAL.REVERSED": // Expired and Cancelled by PayPal
 		var res struct {
 			Id string `json:"id"`
 		}
@@ -311,9 +311,9 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		}
 
 	case
-		"PAYMENT.CAPTURE.DENIED",
-		"PAYMENT.CAPTURE.REVERSED",
-		"PAYMENT.CAPTURE.COMPLETED":
+		"PAYMENT.CAPTURE.DENIED",    // Cancelled By PayPal
+		"PAYMENT.CAPTURE.DECLINED",  // Cancelled By IssuingBank
+		"PAYMENT.CAPTURE.COMPLETED": // Success
 
 		var cap paypal.CaptureResource
 		if err = jsonx.UnmarshalBytes(raw, &cap); err != nil {
@@ -324,7 +324,7 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		cbinfo.Type = driver.CallbackTypePayment
 
 	/// Refund
-	case "PAYMENT.REFUND.FAILED":
+	case "PAYMENT.REFUND.FAILED": // Refund Failure
 		var rf paypal.RefundResource
 		if err = json.Unmarshal(raw, &rf); err != nil {
 			return
@@ -334,7 +334,7 @@ func (d Driver) ParseCallbackRequest(ctx context.Context, req driver.CallbackReq
 		cbinfo.RefundInfo = &info
 		cbinfo.Type = driver.CallbackTypeRefund
 
-	case "PAYMENT.CAPTURE.REFUNDED":
+	case "PAYMENT.CAPTURE.REFUNDED": // Refund Success
 		var cap paypal.CaptureResource
 		if err = jsonx.UnmarshalBytes(raw, &cap); err != nil {
 			return
