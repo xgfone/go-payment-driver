@@ -5,14 +5,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/smartwalle/alipay/v3 v3.2.29 h1:roGFqlml8hDa//0TpFmlyxZhndTYs7rbYLu/HlNFNJo=
-github.com/smartwalle/alipay/v3 v3.2.29/go.mod h1:XarBLuAkwK3ah7mYjVtghRu+ysxzlex9sRkgqNMzMRU=
-github.com/smartwalle/ncrypto v1.0.4 h1:P2rqQxDepJwgeO5ShoC+wGcK2wNJDmcdBOWAksuIgx8=
-github.com/smartwalle/ncrypto v1.0.4/go.mod h1:Dwlp6sfeNaPMnOxMNayMTacvC5JGEVln3CVdiVDgbBk=
-github.com/smartwalle/ngx v1.1.0 h1:q8nANgWSPRGeI/u+ixBoA4mf68DrUq6vZ+n9L5UKv9I=
-github.com/smartwalle/ngx v1.1.0/go.mod h1:mx/nz2Pk5j+RBs7t6u6k22MPiBG/8CtOMpCnALIG8Y0=
-github.com/smartwalle/nsign v1.0.9 h1:8poAgG7zBd8HkZy9RQDwasC6XZvJpDGQWSjzL2FZL6E=
-github.com/smartwalle/nsign v1.0.9/go.mod h1:eY6I4CJlyNdVMP+t6z1H6Jpd4m5/V+8xi44ufSTxXgc=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=
@@ -23,8 +15,6 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/wechatpay-apiv3/wechatpay-go v0.2.21 h1:uIyMpzvcaHA33W/QPtHstccw+X52HO1gFdvVL9O6Lfs=
 github.com/wechatpay-apiv3/wechatpay-go v0.2.21/go.mod h1:A254AUBVB6R+EqQFo3yTgeh7HtyqRRtN2w9hQSOrd4Q=
-github.com/xgfone/go-currency v0.1.0 h1:DboYd1qO/Jhgv+iIZ1paVoSbc8ep6ZwQoEpvmCCpQus=
-github.com/xgfone/go-currency v0.1.0/go.mod h1:GdoQfBTxhqlr1EUC1PP1tEs5CpzA5cAoajNLNU6G3/U=
 github.com/xgfone/go-toolkit v0.17.0 h1:tSIeFYnSka79/BYKdURbeud2lRogJC9PzF8gqF/OL3k=
 github.com/xgfone/go-toolkit v0.17.0/go.mod h1:eOWnIK/acAJOoqEOtWnvuY0Pbn6cZ0DP/Oeoyn17QHw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
