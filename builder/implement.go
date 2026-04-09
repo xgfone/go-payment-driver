@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/xgfone/go-payment-driver/driver"
+	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/validation"
 )
 
@@ -71,11 +72,25 @@ func (b *_Builder[Config]) Metadata() driver.Metadata {
 func (b *_Builder[Config]) ParseConfig(conf string) (any, error) {
 	var err error
 	var config Config
+
 	if v, ok := any(config).(interface{ Bind(string) error }); ok {
 		err = v.Bind(conf)
 	} else {
-		err = validation.BindJSONString(context.Background(), conf, &config)
+		_config := &config
+
+		if err = jsonx.UnmarshalString(conf, _config); err != nil {
+			return nil, err
+		}
+
+		if v, ok := any(_config).(interface{ Init() error }); ok {
+			if err = v.Init(); err != nil {
+				return nil, err
+			}
+		}
+
+		err = validation.Validate(context.Background(), &config)
 	}
+
 	return config, err
 }
 
