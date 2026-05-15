@@ -19,6 +19,7 @@ import (
 
 	"github.com/xgfone/go-payment-driver/driver"
 	"github.com/xgfone/go-toolkit/jsonx"
+	"github.com/xgfone/go-toolkit/structx"
 	"github.com/xgfone/go-toolkit/validation"
 )
 
@@ -85,6 +86,10 @@ func (b *_Builder[Config]) ParseConfig(conf string) (any, error) {
 			if err = v.Init(); err != nil {
 				return nil, err
 			}
+		}
+
+		if err = structx.SetDefault(_config); err != nil {
+			return nil, err
 		}
 
 		err = validation.Validate(&config)
