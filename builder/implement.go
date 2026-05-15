@@ -15,7 +15,6 @@
 package builder
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/xgfone/go-payment-driver/driver"
@@ -88,7 +87,7 @@ func (b *_Builder[Config]) ParseConfig(conf string) (any, error) {
 			}
 		}
 
-		err = validation.Validate(context.Background(), &config)
+		err = validation.Validate(&config)
 	}
 
 	return config, err
