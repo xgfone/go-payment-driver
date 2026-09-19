@@ -15,10 +15,11 @@
 package builder
 
 import (
+	"encoding/json"
 	"fmt"
+	"unsafe"
 
 	"github.com/xgfone/go-payment-driver/driver"
-	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/structx"
 	"github.com/xgfone/go-toolkit/validation"
 )
@@ -78,7 +79,8 @@ func (b *_Builder[Config]) ParseConfig(conf string) (any, error) {
 	} else {
 		_config := &config
 
-		if err = jsonx.UnmarshalString(conf, _config); err != nil {
+		data := unsafe.Slice(unsafe.StringData(conf), len(conf))
+		if err = json.Unmarshal(data, _config); err != nil {
 			return nil, err
 		}
 

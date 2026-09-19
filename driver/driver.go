@@ -18,12 +18,13 @@ package driver
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"net/http"
 	"slices"
 	"time"
+	"unsafe"
 
 	"github.com/xgfone/go-toolkit/codeint"
-	"github.com/xgfone/go-toolkit/jsonx"
 	"github.com/xgfone/go-toolkit/timex"
 )
 
@@ -422,7 +423,8 @@ func (md *Metadata) ChannelIsSupported(channel string) bool {
 }
 
 func EncodeChannelData[T any](channelData T) (channelDataStr string) {
-	channelDataStr, _ = jsonx.MarshalString(channelData)
+	data, _ := json.Marshal(channelData)
+	channelDataStr = unsafe.String(unsafe.SliceData(data), len(data))
 	if channelDataStr == "{}" {
 		channelDataStr = ""
 	}
@@ -434,7 +436,8 @@ func DecodeChannelData[T any](channelDataStr string) (channelData T) {
 		return
 	}
 
-	_ = jsonx.UnmarshalString(channelDataStr, &channelData)
+	data := unsafe.Slice(unsafe.StringData(channelDataStr), len(channelDataStr))
+	_ = json.Unmarshal(data, &channelData)
 	return
 }
 
