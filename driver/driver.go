@@ -94,6 +94,70 @@ type (
 		// the driver implementation should ignore it.
 		CallbackUrl string `json:",omitzero"`
 
+		// ReturnUrl is the browser return URL after the payer completes checkout
+		// or approves a payment, depending on the selected payment flow.
+		//
+		// Callers are encouraged to provide it, especially for web-based payments.
+		// A caller requiring a specific return destination must provide it rather
+		// than assume that the driver's generic default meets its business needs.
+		// Whether this field is used or required is determined by the driver
+		// and the selected payment flow.
+		//
+		// If used and non-empty, the driver uses this value as supplied,
+		// without adding query parameters, merging the configured default,
+		// rewriting the URL, or substituting provider-specific placeholders.
+		//
+		// If empty, the driver uses its configured default return URL, if any,
+		// and appends the query parameter "PaymentId" using this request's
+		// PaymentId. The original URL content and stored configuration are
+		// otherwise left unchanged.
+		//
+		// "PaymentId" is a reserved query parameter name in the configured
+		// default URL and must not already be present. The driver is not
+		// responsible for detecting or correcting violations of this rule.
+		//
+		// If neither value is available, CreatePayment returns an error
+		// identifying ReturnUrl as missing only when the driver requires it.
+		// CancelUrl must never be used as a fallback.
+		//
+		// The caller is responsible for business-specific URL validation,
+		// including allowed destinations. The driver may validate URL format
+		// and provider requirements, but must not rewrite the supplied value.
+		//
+		// This URL is for browser navigation, not server-to-server notifications.
+		// Returning to this URL does not prove that the payment succeeded.
+		ReturnUrl string `json:",omitzero"`
+
+		// CancelUrl is the browser return URL when the payer explicitly cancels
+		// the payment or approval flow through the payment provider. Use it to
+		// return the payer to a checkout page, an order-detail page, or a
+		// cancellation-return handler.
+		//
+		// Callers are encouraged to provide it, especially for web-based payments.
+		// A caller requiring a specific cancellation destination must provide it.
+		// Whether this field is used or required is determined by the driver
+		// and the selected payment flow.
+		//
+		// If used and non-empty, the driver uses this value as supplied, without
+		// adding query parameters, merging the configured default, rewriting
+		// the URL, or substituting provider-specific placeholders.
+		//
+		// If empty, the driver uses its configured default cancellation URL,
+		// if any, and appends the query parameter "PaymentId" using this request's
+		// PaymentId. The original URL content and stored configuration are
+		// otherwise left unchanged.
+		//
+		// The reserved-parameter and validation rules documented for ReturnUrl
+		// also apply to CancelUrl.
+		//
+		// If neither value is available, CreatePayment returns an error
+		// identifying CancelUrl as missing only when the driver requires it.
+		// ReturnUrl must never be used as a fallback.
+		//
+		// This is not a general payment-failure URL. Visiting it does not,
+		// by itself, cancel or close the payment order.
+		CancelUrl string `json:",omitzero"`
+
 		// Payment validity period, after which the payment will automatically
 		// become invalid or automatically close.
 		//
